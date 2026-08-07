@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Archivo académico{% endblock %}</title>
+    <style>
+        :root {
+            --bg: #15201a;
+            --bg-text: #ede7d6;
+            --bg-text-soft: #9c977e;
+            --paper: #f1ecdd;
+            --paper-line: #dcd2b4;
+            --ink: #1c2620;
+            --ink-soft: #605c49;
+            --azul: #2f5d8a;
+            --azul-bg: #dbe4ee;
+            --rojo: #a23b32;
+            --rojo-bg: #f2dcd6;
+            --verde: #5c6b3f;
+            --verde-bg: #e2e6d5;
+            --shadow: 0 1px 2px rgba(10, 14, 10, .3), 0 14px 30px rgba(6, 10, 6, .35);
+            --radius: 3px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--bg-text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.5;
+        }
+
+        header.top,
+        main,
+        footer.site {
+            max-width: 1040px;
+            margin: 0 auto;
+        }
+
+        header.top {
+            padding: 2.6rem 2rem 1.3rem;
+        }
+
+        h1 {
+            font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', serif;
+            font-size: 2.1rem;
+            margin: 0 0 0.3rem;
+            letter-spacing: -0.01em;
+        }
+
+        .subtitle {
+            color: var(--bg-text-soft);
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        nav.tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1.4rem;
+        }
+
+        nav.tabs a {
+            text-decoration: none;
+            color: var(--bg-text-soft);
+            font-size: 0.8rem;
+            padding: 0.4rem 0.95rem;
+            border-radius: 999px;
+            border: 1px solid rgba(237, 231, 214, 0.22);
+        }
+
+        nav.tabs a.active {
+            background: var(--bg-text);
+            color: var(--bg);
+            border-color: var(--bg-text);
+        }
+
+        nav.tabs a:hover:not(.active) {
+            border-color: rgba(237, 231, 214, 0.5);
+            color: var(--bg-text);
+        }
+
+        main {
+            padding: 0.4rem 2rem 3rem;
+        }
+
+        footer.site {
+            padding: 1rem 2rem 2.5rem;
+            color: var(--bg-text-soft);
+            font-size: 0.73rem;
+        }
+
+        a:focus-visible,
+        button:focus-visible,
+        input:focus-visible,
+        textarea:focus-visible,
+        select:focus-visible {
+            outline: 2px solid var(--rojo);
+            outline-offset: 2px;
+        }
+
+        @keyframes aparecer {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.001ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.001ms !important;
+            }
+        }
+
+        @media (max-width: 600px) {
+
+            header.top,
+            main,
+            footer.site {
+                padding-left: 1.2rem;
+                padding-right: 1.2rem;
+            }
+
+            h1 {
+                font-size: 1.7rem;
+            }
+        }
+
+            {
+            % block extra_style %
+        }
+
+            {
+            % endblock %
+        }
+    </style>
+</head>
+
+<body>
+    <header class="top">
+        <h1>{% block heading %}Archivo académico{% endblock %}</h1>
+        <p class="subtitle">{% block subtitle %}{% endblock %}</p>
+        <nav class="tabs">
+            <a href="{% url 'index' %}" {% if active_tab == 'index' %}class="active" {% endif %}>Portada</a>
+            <a href="{% url 'candidatos' %}" {% if active_tab == 'candidatos' %}class="active" {% endif %}>Candidatos</a>
+            <a href="{% url 'comite' %}" {% if active_tab == 'comite' %}class="active" {% endif %}>Comités</a>
+            <a href="{% url 'profesores' %}" {% if active_tab == 'profesores' %}class="active" {% endif %}>Profesores</a>
+            <a href="{% url 'nuevo_alumno' %}" {% if active_tab == 'alumno nuevo' %}class="active" {% endif %}>Alumno nuevo</a>
+            <a href="{% url 'listado_alumno' %}" {% if active_tab == 'listado_alumno' %}class="active" {% endif %}>Listado de alumnos</a>
+        </nav>
+    </header>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="site">{% block footer %}Datos ficticios generados para prototipar la interfaz.{% endblock %}</footer>
+</body>
+
+</html>

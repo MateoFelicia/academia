@@ -1,0 +1,196 @@
+{% extends "myapp/base.html" %}
+
+{% block title %}Fichero docente — Archivo académico{% endblock %}
+{% block heading %}Fichero docente{% endblock %}
+{% block subtitle %}8 profesores registrados · datos de muestra, no reales{% endblock %}
+
+{% block extra_style %}
+.controls {
+display: flex;
+flex-wrap: wrap;
+gap: 0.6rem;
+margin-bottom: 1.6rem;
+align-items: center;
+}
+
+.buscar {
+flex: 1;
+min-width: 200px;
+padding: 0.6rem 0.9rem;
+border: 1px solid var(--paper-line);
+border-radius: var(--radius);
+font-size: 0.86rem;
+background: var(--paper);
+color: var(--ink);
+font-family: inherit;
+}
+
+.buscar::placeholder { color: var(--ink-soft); }
+
+.filtro {
+padding: 0.42rem 0.9rem;
+border-radius: 999px;
+border: 1px solid rgba(237,231,214,0.22);
+background: transparent;
+color: var(--bg-text-soft);
+font-size: 0.76rem;
+cursor: pointer;
+font-family: inherit;
+}
+
+.filtro.active { background: var(--bg-text); color: var(--bg); border-color: var(--bg-text); }
+
+.grid {
+display: grid;
+grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+gap: 1.1rem;
+}
+
+.ficha {
+position: relative;
+background: var(--paper);
+border: 1px solid var(--paper-line);
+border-radius: var(--radius);
+padding: 1.1rem 1.2rem 1.1rem 2.15rem;
+box-shadow: var(--shadow);
+animation: aparecer 0.45s ease both;
+animation-delay: calc(var(--i, 0) * 45ms);
+transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ficha:hover { transform: translateY(-3px); }
+
+.ficha::before, .ficha::after {
+content: "";
+position: absolute;
+left: 0.8rem;
+width: 0.5rem;
+height: 0.5rem;
+border-radius: 50%;
+background: var(--bg);
+box-shadow: inset 0 1px 2px rgba(0,0,0,0.45);
+}
+.ficha::before { top: 1.15rem; }
+.ficha::after { bottom: 1.15rem; }
+
+.ficha-top {
+display: flex;
+justify-content: space-between;
+align-items: flex-start;
+gap: 0.6rem;
+margin-bottom: 0.65rem;
+}
+
+.ficha-nombre { font-family: Georgia, serif; font-weight: 600; font-size: 1.02rem; color: var(--ink); }
+.ficha-dni {
+font-family: ui-monospace, 'SF Mono', 'Courier New', monospace;
+color: var(--ink-soft);
+font-size: 0.74rem;
+margin-top: 0.2rem;
+}
+
+.sello-badge {
+position: relative;
+display: inline-block;
+font-family: ui-monospace, 'SF Mono', 'Courier New', monospace;
+font-size: 0.63rem;
+font-weight: 700;
+letter-spacing: 0.05em;
+text-transform: uppercase;
+padding: 0.22rem 0.55rem;
+border: 1.5px solid currentColor;
+border-radius: 999px;
+transform: rotate(-3deg);
+white-space: nowrap;
+}
+.sello-badge::before {
+content: "";
+position: absolute;
+inset: 2px;
+border: 1px solid currentColor;
+border-radius: 999px;
+opacity: 0.45;
+}
+.sello-badge.tutor { color: var(--azul); background: var(--azul-bg); }
+.sello-badge.especialista { color: var(--rojo); background: var(--rojo-bg); }
+.sello-badge.ambos { color: var(--verde); background: var(--verde-bg); }
+
+dl.ficha-datos {
+margin: 0.75rem 0 0;
+display: grid;
+grid-template-columns: auto 1fr;
+gap: 0.32rem 0.6rem;
+font-size: 0.81rem;
+color: var(--ink);
+}
+dl.ficha-datos dt { color: var(--ink-soft); }
+dl.ficha-datos dd { margin: 0; }
+
+.vacio { color: var(--bg-text-soft); font-size: 0.88rem; }
+
+@media (max-width: 600px) {
+.controls { flex-direction: column; align-items: stretch; }
+}
+{% endblock %}
+
+{% block content %}
+<div class="controls">
+  <input class="buscar" type="text" placeholder="Buscar por nombre o apellido…" oninput="render()">
+  <button class="filtro active" onclick="setFiltro('TODOS', this)">Todos</button>
+  <button class="filtro" onclick="setFiltro('TUTOR', this)">Tutores</button>
+  <button class="filtro" onclick="setFiltro('ESPECIALISTA', this)">Especialistas</button>
+  <button class="filtro" onclick="setFiltro('AMBOS', this)">Ambos</button>
+</div>
+<div class="grid" id="grid"></div>
+
+<script>
+  const PROFESORES = [
+    { id: 1, dni: "30.111.222", nombre: "Lucía", apellidos: "Fernández Suárez", domicilio: "Av. Colón 1234, Córdoba", nivel: "Universitario", titulacion: "Profesorado en Educación Primaria", tipo: "TUTOR" },
+    { id: 2, dni: "28.456.789", nombre: "Martín", apellidos: "Gómez Ibarra", domicilio: "Bv. Illia 456, Córdoba", nivel: "Universitario", titulacion: "Licenciatura en Educación Física", tipo: "ESPECIALISTA" },
+    { id: 3, dni: "32.987.654", nombre: "Valentina", apellidos: "Rossi", domicilio: "Calle Rivadavia 789, Córdoba", nivel: "Terciario", titulacion: "Profesorado en Inglés", tipo: "ESPECIALISTA" },
+    { id: 4, dni: "27.321.098", nombre: "Diego", apellidos: "Herrera", domicilio: "Av. Vélez Sarsfield 2100, Córdoba", nivel: "Universitario", titulacion: "Profesorado en Matemática", tipo: "AMBOS" },
+    { id: 5, dni: "31.654.321", nombre: "Camila", apellidos: "Ortiz", domicilio: "Calle Belgrano 345, Córdoba", nivel: "Universitario", titulacion: "Licenciatura en Psicopedagogía", tipo: "TUTOR" },
+    { id: 6, dni: "29.876.543", nombre: "Facundo", apellidos: "Molina", domicilio: "Bv. Chacabuco 987, Córdoba", nivel: "Terciario", titulacion: "Profesorado en Música", tipo: "ESPECIALISTA" },
+    { id: 7, dni: "33.222.111", nombre: "Sofía", apellidos: "Acosta", domicilio: "Av. Rafael Núñez 1500, Córdoba", nivel: "Universitario", titulacion: "Profesorado en Educación Primaria", tipo: "TUTOR" },
+    { id: 8, dni: "26.789.456", nombre: "Emiliano", apellidos: "Castro", domicilio: "Calle 27 de Abril 678, Córdoba", nivel: "Universitario", titulacion: "Licenciatura en Ciencias de la Educación", tipo: "AMBOS" }
+  ];
+
+  let filtroActivo = "TODOS";
+
+  function render() {
+    const texto = document.querySelector('.buscar').value.trim().toLowerCase();
+    const grid = document.getElementById('grid');
+    const visibles = PROFESORES.filter(p => {
+      const coincideTipo = filtroActivo === "TODOS" || p.tipo === filtroActivo;
+      const nombreCompleto = `${p.nombre} ${p.apellidos}`.toLowerCase();
+      return coincideTipo && nombreCompleto.includes(texto);
+    });
+
+    grid.innerHTML = visibles.length ? visibles.map((p, i) => `
+        <article class="ficha" style="--i:${i}">
+          <div class="ficha-top">
+            <div>
+              <div class="ficha-nombre">${p.nombre} ${p.apellidos}</div>
+              <div class="ficha-dni">DNI ${p.dni}</div>
+            </div>
+            <span class="sello-badge ${p.tipo.toLowerCase()}">${p.tipo}</span>
+          </div>
+          <dl class="ficha-datos">
+            <dt>Título</dt><dd>${p.titulacion}</dd>
+            <dt>Nivel</dt><dd>${p.nivel}</dd>
+            <dt>Domicilio</dt><dd>${p.domicilio}</dd>
+          </dl>
+        </article>
+      `).join('') : '<p class="vacio">Ninguna ficha coincide con este filtro.</p>';
+  }
+
+  function setFiltro(tipo, boton) {
+    filtroActivo = tipo;
+    document.querySelectorAll('.filtro').forEach(b => b.classList.remove('active'));
+    boton.classList.add('active');
+    render();
+  }
+
+  render();
+</script>
+{% endblock %}

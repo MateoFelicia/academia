@@ -1,0 +1,134 @@
+{% extends "myapp/base.html" %}
+
+{% block title %}Libro de actas — Archivo académico{% endblock %}
+{% block heading %}Libro de actas{% endblock %}
+{% block subtitle %}3 actas registradas · datos de muestra, no reales{% endblock %}
+
+{% block extra_style %}
+  main { max-width: 860px; }
+
+  .acta {
+    position: relative;
+    background: var(--paper);
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius);
+    padding: 1.3rem 1.4rem;
+    box-shadow: var(--shadow);
+    margin-bottom: 1.3rem;
+    animation: aparecer 0.45s ease both;
+    animation-delay: calc(var(--i, 0) * 60ms);
+  }
+  .acta:last-child { margin-bottom: 0; }
+
+  .acta-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 1px solid var(--paper-line);
+    padding-bottom: 0.7rem;
+    margin-bottom: 1rem;
+  }
+
+  .acta-numero {
+    font-family: ui-monospace, 'SF Mono', 'Courier New', monospace;
+    font-size: 0.72rem;
+    color: var(--ink-soft);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .acta-anio {
+    font-family: Georgia, 'Iowan Old Style', serif;
+    font-size: 1.9rem;
+    color: var(--ink);
+  }
+
+  .firmas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 1.3rem;
+  }
+
+  .firma { display: flex; flex-direction: column; gap: 0.35rem; }
+
+  .firma-rol {
+    font-family: ui-monospace, 'SF Mono', 'Courier New', monospace;
+    font-size: 0.63rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    width: fit-content;
+    padding: 0.12rem 0.5rem;
+    border-radius: 999px;
+  }
+  .firma-rol.presidente { color: var(--azul); background: var(--azul-bg); }
+  .firma-rol.secretario { color: var(--rojo); background: var(--rojo-bg); }
+  .firma-rol.vocal { color: var(--verde); background: var(--verde-bg); }
+
+  .firma-nombre {
+    font-family: Georgia, serif;
+    font-style: italic;
+    font-size: 1rem;
+    color: var(--ink);
+    border-bottom: 1px solid var(--paper-line);
+    padding-bottom: 0.35rem;
+  }
+
+  .firma-titulo { color: var(--ink-soft); font-size: 0.76rem; }
+
+  @media (max-width: 600px) {
+    .acta-header { flex-direction: column; align-items: flex-start; gap: 0.3rem; }
+  }
+{% endblock %}
+
+{% block content %}
+  <div id="libro"></div>
+
+  <script>
+    const PROFESORES = {
+      1: {nombre:"Lucía Fernández Suárez", titulacion:"Profesorado en Educación Primaria"},
+      2: {nombre:"Martín Gómez Ibarra", titulacion:"Licenciatura en Educación Física"},
+      3: {nombre:"Valentina Rossi", titulacion:"Profesorado en Inglés"},
+      4: {nombre:"Diego Herrera", titulacion:"Profesorado en Matemática"},
+      5: {nombre:"Camila Ortiz", titulacion:"Licenciatura en Psicopedagogía"},
+      6: {nombre:"Facundo Molina", titulacion:"Profesorado en Música"},
+      7: {nombre:"Sofía Acosta", titulacion:"Profesorado en Educación Primaria"},
+      8: {nombre:"Emiliano Castro", titulacion:"Licenciatura en Ciencias de la Educación"}
+    };
+
+    const COMITES = [
+      {id:1, anio:2024, id_presidente:4, id_secretario:1, id_vocal:2},
+      {id:2, anio:2025, id_presidente:8, id_secretario:5, id_vocal:3},
+      {id:3, anio:2026, id_presidente:4, id_secretario:7, id_vocal:6}
+    ];
+
+    function firma(rol, clase, idProfesor) {
+      const p = PROFESORES[idProfesor];
+      return `
+        <div class="firma">
+          <span class="firma-rol ${clase}">${rol}</span>
+          <span class="firma-nombre">${p.nombre}</span>
+          <span class="firma-titulo">${p.titulacion}</span>
+        </div>
+      `;
+    }
+
+    function render() {
+      const ordenadas = COMITES.slice().sort((a, b) => b.anio - a.anio);
+      document.getElementById('libro').innerHTML = ordenadas.map((c, i) => `
+        <section class="acta" style="--i:${i}">
+          <div class="acta-header">
+            <span class="acta-numero">Acta n.º ${String(c.id).padStart(2, '0')}</span>
+            <span class="acta-anio">${c.anio}</span>
+          </div>
+          <div class="firmas">
+            ${firma('Presidente', 'presidente', c.id_presidente)}
+            ${firma('Secretario', 'secretario', c.id_secretario)}
+            ${firma('Vocal', 'vocal', c.id_vocal)}
+          </div>
+        </section>
+      `).join('');
+    }
+
+    render();
+  </script>
+{% endblock %}

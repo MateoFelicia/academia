@@ -1,0 +1,116 @@
+{% extends "myapp/base.html" %}
+
+{% block title %}Archivo académico — Portada{% endblock %}
+{% block heading %}Archivo académico{% endblock %}
+{% block subtitle %}Instituto Técnico · legajo de postulantes, comités y cuerpo docente{% endblock %}
+
+{% block extra_style %}
+.portada {
+background: var(--paper);
+border: 1px solid var(--paper-line);
+border-radius: var(--radius);
+box-shadow: var(--shadow);
+padding: 2.4rem 2.2rem;
+margin-top: 0.6rem;
+animation: aparecer 0.45s ease both;
+}
+
+.portada-sello {
+font-family: ui-monospace, 'SF Mono', 'Courier New', monospace;
+font-size: 0.68rem;
+letter-spacing: 0.08em;
+text-transform: uppercase;
+color: var(--ink-soft);
+border-bottom: 1px solid var(--paper-line);
+padding-bottom: 1rem;
+margin-bottom: 1.4rem;
+}
+
+.portada-titulo {
+font-family: Georgia, 'Iowan Old Style', serif;
+font-size: 1.5rem;
+color: var(--ink);
+margin: 0 0 0.5rem;
+}
+
+.portada-copete {
+color: var(--ink-soft);
+font-size: 0.92rem;
+max-width: 46ch;
+margin: 0 0 1.8rem;
+}
+
+.secciones {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+gap: 1rem;
+}
+
+.seccion {
+display: block;
+text-decoration: none;
+border: 1px solid var(--paper-line);
+border-radius: var(--radius);
+padding: 1rem 1.1rem;
+transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.seccion:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(28,38,32,0.12); }
+
+.seccion-rotulo {
+font-family: ui-monospace, 'SF Mono', 'Courier New', monospace;
+font-size: 0.63rem;
+letter-spacing: 0.06em;
+text-transform: uppercase;
+color: var(--azul);
+background: var(--azul-bg);
+padding: 0.15rem 0.5rem;
+border-radius: 999px;
+display: inline-block;
+margin-bottom: 0.6rem;
+}
+
+.seccion-nombre {
+font-family: Georgia, serif;
+font-weight: 600;
+color: var(--ink);
+font-size: 1.05rem;
+margin-bottom: 0.3rem;
+}
+
+.seccion-detalle { color: var(--ink-soft); font-size: 0.8rem; }
+{% endblock %}
+
+{% block content %}
+<section class="portada">
+    <p class="portada-sello">Legajo N.º 001 · actualizado ciclo lectivo 2026</p>
+    <h2 class="portada-titulo">Bienvenido al archivo</h2>
+    <p class="portada-copete">
+        Cuatro libros conforman este archivo: postulantes en proceso de selección,
+        actas del comité evaluador, fichero del cuerpo docente y matrícula de alumnos.
+        Elegí un libro para consultarlo.
+    </p>
+    <div class="secciones">
+        <a class="seccion" href="{% url 'candidatos' %}">
+            <span class="seccion-rotulo">Libro I</span>
+            <div class="seccion-nombre">Candidatos</div>
+            <div class="seccion-detalle">Postulantes con entrevista y materia asignada</div>
+        </a>
+        <a class="seccion" href="{% url 'comite' %}">
+            <span class="seccion-rotulo">Libro II</span>
+            <div class="seccion-nombre">Comités</div>
+            <div class="seccion-detalle">Actas firmadas por presidente, secretario y vocal</div>
+        </a>
+        <a class="seccion" href="{% url 'profesores' %}">
+            <span class="seccion-rotulo">Libro III</span>
+            <div class="seccion-nombre">Profesores</div>
+            <div class="seccion-detalle">Fichero docente por tutoría y especialidad</div>
+        </a>
+        <a class="seccion" href="{% url 'nuevo_alumno' %}">
+            <span class="seccion-rotulo">Libro IV</span>
+            <div class="seccion-nombre">Alumnos</div>
+            <div class="seccion-detalle">Alta e inspección de la matrícula vigente</div>
+        </a>
+    </div>
+</section>
+{% endblock %}
