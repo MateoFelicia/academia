@@ -65,7 +65,7 @@ def nuevo_profesor(request):
     if request.method == "POST":
         form = ProfesorForm(request.POST)
         if form.is_valid():
-            ALUMNOS_MOCK.append({
+            PROFESORES_MOCK.append({
                 "id_profesor": next(_id_profesor),
                 "dni": form.cleaned_data["dni"],
                 "nombre": form.cleaned_data["nombre"],
@@ -80,7 +80,7 @@ def nuevo_profesor(request):
     else:
         form = ProfesorForm()
 
-    return render(request, "myapp/profesores.html", {
+    return render(request, "myapp/nuevo_profesores.html", {
         "form": form,
         "guardado": guardado,
         "active_tab": "profesores",

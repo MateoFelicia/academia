@@ -162,8 +162,9 @@
             <a href="{% url 'candidatos' %}" {% if active_tab == 'candidatos' %}class="active" {% endif %}>Candidatos</a>
             <a href="{% url 'comite' %}" {% if active_tab == 'comite' %}class="active" {% endif %}>Comités</a>
             <a href="{% url 'profesores' %}" {% if active_tab == 'profesores' %}class="active" {% endif %}>Profesores</a>
+            <a href="{% url 'nuevo_profesores' %}" {% if active_tab == 'nuevo_profesores' %}class="active" {% endif %}>Profesor nuevo</a>
+            <a href="{% url 'alumnos' %}" {% if active_tab == 'alumnos' %}class="active" {% endif %}>Alumnos</a>
             <a href="{% url 'nuevo_alumno' %}" {% if active_tab == 'alumno nuevo' %}class="active" {% endif %}>Alumno nuevo</a>
-            <a href="{% url 'listado_alumno' %}" {% if active_tab == 'listado_alumno' %}class="active" {% endif %}>Listado de alumnos</a>
         </nav>
     </header>
     <main>
