@@ -2,10 +2,294 @@
 
 {% block title %}Libro de actas — Archivo académico{% endblock %}
 {% block heading %}Libro de actas{% endblock %}
-{% block subtitle %}3 actas registradas · datos de muestra, no reales{% endblock %}
+{% block subtitle %}Comités evaluadores registrados{% endblock %}
 
 {% block extra_style %}
   main { max-width: 860px; }
+
+  .formulario-comite {
+    background: var(--paper);
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius);
+    padding: 1.3rem 1.4rem;
+    box-shadow: var(--shadow);
+    margin-bottom: 1.5rem;
+  }
+
+  .formulario-comite h2 {
+    font-family: Georgia, 'Iowan Old Style', serif;
+    font-size: 1.4rem;
+    color: var(--ink);
+    margin-top: 0;
+    margin-bottom: 1rem;
+  }
+
+  .mensaje-exito {
+    padding: 0.8rem 1rem;
+    margin-bottom: 1rem;
+    border-radius: 6px;
+    background: var(--verde-bg);
+    color: var(--verde);
+    border: 1px solid var(--paper-line);
+  }
+
+  .errores {
+    color: var(--rojo);
+    font-size: 0.8rem;
+    margin-bottom: 1rem;
+  }
+
+  /* --- Wizard --- */
+  .wizard-steps {
+    display: flex;
+    gap: 0.25rem;
+    margin-bottom: 1.6rem;
+  }
+
+  .wizard-step {
+    flex: 1;
+    text-align: center;
+    padding: 0.55rem 0.3rem;
+    font-size: 0.68rem;
+    font-family: ui-monospace, 'SF Mono', 'Courier New', monospace;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    border-bottom: 2px solid var(--paper-line);
+    transition: color 0.25s, border-color 0.25s;
+  }
+
+  .wizard-step.active {
+    color: var(--azul);
+    border-bottom-color: var(--azul);
+    font-weight: 600;
+  }
+
+  .wizard-step.done {
+    color: var(--verde);
+    border-bottom-color: var(--verde);
+  }
+
+  .wizard-panel {
+    display: none;
+  }
+
+  .wizard-panel.active {
+    display: block;
+    animation: aparecer 0.3s ease both;
+  }
+
+  .wizard-pregunta {
+    font-family: Georgia, 'Iowan Old Style', serif;
+    font-size: 1.15rem;
+    color: var(--ink);
+    margin-bottom: 0.8rem;
+  }
+
+  .wizard-year-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.75rem 0.85rem;
+    border: 1px solid var(--paper-line);
+    border-radius: 6px;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: Georgia, serif;
+    font-size: 1.3rem;
+    text-align: center;
+    letter-spacing: 0.02em;
+  }
+
+  .wizard-year-input:focus {
+    outline: none;
+    border-color: var(--azul);
+  }
+
+  .wizard-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 1rem;
+    min-height: 1.6rem;
+  }
+
+  .wizard-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-family: ui-monospace, 'SF Mono', 'Courier New', monospace;
+    letter-spacing: 0.03em;
+  }
+
+  .wizard-chip.rol-presidente {
+    background: var(--azul-bg);
+    color: var(--azul);
+  }
+
+  .wizard-chip.rol-secretario {
+    background: var(--rojo-bg);
+    color: var(--rojo);
+  }
+
+  .wizard-chip.rol-vocal {
+    background: var(--verde-bg);
+    color: var(--verde);
+  }
+
+  .wizard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0.8rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .wizard-card {
+    background: var(--paper);
+    border: 2px solid var(--paper-line);
+    border-radius: 6px;
+    padding: 0.9rem 1rem;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .wizard-card:hover {
+    border-color: var(--azul);
+  }
+
+  .wizard-card.selected {
+    border-color: var(--azul);
+    box-shadow: 0 0 0 1px var(--azul);
+  }
+
+  .wizard-card .card-nombre {
+    font-family: Georgia, serif;
+    font-style: italic;
+    font-size: 0.95rem;
+    color: var(--ink);
+    margin-bottom: 0.15rem;
+  }
+
+  .wizard-card .card-titulo {
+    font-size: 0.75rem;
+    color: var(--ink-soft);
+    margin-bottom: 0.3rem;
+  }
+
+  .wizard-card .card-tipo {
+    display: inline-block;
+    font-family: ui-monospace, 'SF Mono', 'Courier New', monospace;
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.1rem 0.45rem;
+    border-radius: 999px;
+  }
+
+  .wizard-card .card-tipo.t-tutor {
+    background: var(--verde-bg);
+    color: var(--verde);
+  }
+
+  .wizard-card .card-tipo.t-especialista {
+    background: var(--rojo-bg);
+    color: var(--rojo);
+  }
+
+  .wizard-card .card-tipo.t-ambos {
+    background: var(--azul-bg);
+    color: var(--azul);
+  }
+
+  .wizard-card .card-check {
+    float: right;
+    font-size: 0.9rem;
+    color: var(--azul);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .wizard-card.selected .card-check {
+    opacity: 1;
+  }
+
+  .wizard-nav {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.6rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid var(--paper-line);
+  }
+
+  .wizard-btn {
+    border: none;
+    border-radius: 6px;
+    padding: 0.65rem 1.2rem;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.82rem;
+    transition: opacity 0.15s;
+  }
+
+  .wizard-btn:hover {
+    opacity: 0.88;
+  }
+
+  .wizard-btn-atras {
+    background: transparent;
+    color: var(--ink-soft);
+    border: 1px solid var(--paper-line);
+  }
+
+  .wizard-btn-siguiente {
+    background: var(--azul);
+    color: white;
+  }
+
+  .wizard-btn-guardar {
+    background: var(--verde);
+    color: white;
+  }
+
+  .wizard-btn:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  .wizard-resumen {
+    background: var(--paper);
+    border: 1px solid var(--paper-line);
+    border-radius: 6px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .wizard-resumen-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid var(--paper-line);
+  }
+
+  .wizard-resumen-item:last-child {
+    border-bottom: none;
+  }
+
+  .wizard-resumen-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+  }
+
+  .wizard-resumen-valor {
+    font-family: Georgia, serif;
+    font-style: italic;
+    color: var(--ink);
+  }
 
   .acta {
     position: relative;
@@ -16,9 +300,11 @@
     box-shadow: var(--shadow);
     margin-bottom: 1.3rem;
     animation: aparecer 0.45s ease both;
-    animation-delay: calc(var(--i, 0) * 60ms);
   }
-  .acta:last-child { margin-bottom: 0; }
+
+  .acta:last-child {
+    margin-bottom: 0;
+  }
 
   .acta-header {
     display: flex;
@@ -49,7 +335,11 @@
     gap: 1.3rem;
   }
 
-  .firma { display: flex; flex-direction: column; gap: 0.35rem; }
+  .firma {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
 
   .firma-rol {
     font-family: ui-monospace, 'SF Mono', 'Courier New', monospace;
@@ -60,9 +350,21 @@
     padding: 0.12rem 0.5rem;
     border-radius: 999px;
   }
-  .firma-rol.presidente { color: var(--azul); background: var(--azul-bg); }
-  .firma-rol.secretario { color: var(--rojo); background: var(--rojo-bg); }
-  .firma-rol.vocal { color: var(--verde); background: var(--verde-bg); }
+
+  .firma-rol.presidente {
+    color: var(--azul);
+    background: var(--azul-bg);
+  }
+
+  .firma-rol.secretario {
+    color: var(--rojo);
+    background: var(--rojo-bg);
+  }
+
+  .firma-rol.vocal {
+    color: var(--verde);
+    background: var(--verde-bg);
+  }
 
   .firma-nombre {
     font-family: Georgia, serif;
@@ -73,62 +375,365 @@
     padding-bottom: 0.35rem;
   }
 
-  .firma-titulo { color: var(--ink-soft); font-size: 0.76rem; }
+  .firma-titulo {
+    color: var(--ink-soft);
+    font-size: 0.76rem;
+  }
+
+  .sin-comites {
+    color: var(--ink-soft);
+    text-align: center;
+    padding: 2rem;
+  }
 
   @media (max-width: 600px) {
-    .acta-header { flex-direction: column; align-items: flex-start; gap: 0.3rem; }
+    .acta-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.3rem;
+    }
   }
 {% endblock %}
 
 {% block content %}
-  <div id="libro"></div>
+
+  <!-- FORMULARIO WIZARD PARA AGREGAR UN COMITÉ -->
+  <section class="formulario-comite">
+
+    <h2>Agregar comité evaluador</h2>
+
+    {% if guardado %}
+      <div class="mensaje-exito">
+        Comité agregado correctamente.
+      </div>
+    {% endif %}
+
+    {% if form.non_field_errors %}
+      <div class="errores">
+        {{ form.non_field_errors }}
+      </div>
+    {% endif %}
+
+    <!-- Barra de pasos -->
+    <div class="wizard-steps">
+      <div class="wizard-step active" data-step="0">1. Año</div>
+      <div class="wizard-step" data-step="1">2. Presidente</div>
+      <div class="wizard-step" data-step="2">3. Secretario</div>
+      <div class="wizard-step" data-step="3">4. Vocal</div>
+    </div>
+
+    <form id="wizard-form" method="post">
+      {% csrf_token %}
+
+      <!-- Campos ocultos que el JS puebla antes de enviar -->
+      <input type="hidden" name="anio" id="field-anio" value="">
+      <input type="hidden" name="id_presidente" id="field-presidente" value="">
+      <input type="hidden" name="id_secretario" id="field-secretario" value="">
+      <input type="hidden" name="id_vocal" id="field-vocal" value="">
+
+      <!-- PASO 0: Año -->
+      <div class="wizard-panel active" id="panel-0">
+        <p class="wizard-pregunta">¿De qué año es el acta del comité?</p>
+        <input type="number" class="wizard-year-input" id="year-input"
+               min="2000" max="2100" placeholder="2026" value="">
+        <div class="wizard-nav">
+          <span></span>
+          <button type="button" class="wizard-btn wizard-btn-siguiente"
+                  onclick="wizardNext()" id="btn-next-0">Siguiente</button>
+        </div>
+      </div>
+
+      <!-- PASO 1: Presidente -->
+      <div class="wizard-panel" id="panel-1">
+        <p class="wizard-pregunta">Elegí al presidente del comité</p>
+        <div class="wizard-chips" id="chips-1"></div>
+        <div class="wizard-grid" id="grid-1"></div>
+        <div class="wizard-nav">
+          <button type="button" class="wizard-btn wizard-btn-atras"
+                  onclick="wizardPrev()">Atrás</button>
+          <button type="button" class="wizard-btn wizard-btn-siguiente"
+                  onclick="wizardNext()" id="btn-next-1" disabled>Siguiente</button>
+        </div>
+      </div>
+
+      <!-- PASO 2: Secretario -->
+      <div class="wizard-panel" id="panel-2">
+        <p class="wizard-pregunta">Elegí al secretario del comité</p>
+        <div class="wizard-chips" id="chips-2"></div>
+        <div class="wizard-grid" id="grid-2"></div>
+        <div class="wizard-nav">
+          <button type="button" class="wizard-btn wizard-btn-atras"
+                  onclick="wizardPrev()">Atrás</button>
+          <button type="button" class="wizard-btn wizard-btn-siguiente"
+                  onclick="wizardNext()" id="btn-next-2" disabled>Siguiente</button>
+        </div>
+      </div>
+
+      <!-- PASO 3: Vocal -->
+      <div class="wizard-panel" id="panel-3">
+        <p class="wizard-pregunta">Elegí al vocal del comité</p>
+        <div class="wizard-chips" id="chips-3"></div>
+        <div class="wizard-grid" id="grid-3"></div>
+        <div class="wizard-nav">
+          <button type="button" class="wizard-btn wizard-btn-atras"
+                  onclick="wizardPrev()">Atrás</button>
+          <button type="button" class="wizard-btn wizard-btn-siguiente"
+                  onclick="wizardNext()" id="btn-next-3" disabled>Siguiente</button>
+        </div>
+      </div>
+
+      <!-- PASO 4: Resumen -->
+      <div class="wizard-panel" id="panel-4">
+        <p class="wizard-pregunta">Revisá los datos antes de guardar</p>
+        <div class="wizard-resumen" id="resumen"></div>
+        <div class="wizard-nav">
+          <button type="button" class="wizard-btn wizard-btn-atras"
+                  onclick="wizardPrev()">Atrás</button>
+          <button type="button" class="wizard-btn wizard-btn-guardar"
+                  onclick="wizardSubmit()">Guardar comité</button>
+        </div>
+      </div>
+
+    </form>
+
+  </section>
 
   <script>
-    const PROFESORES = {
-      1: {nombre:"Lucía Fernández Suárez", titulacion:"Profesorado en Educación Primaria"},
-      2: {nombre:"Martín Gómez Ibarra", titulacion:"Licenciatura en Educación Física"},
-      3: {nombre:"Valentina Rossi", titulacion:"Profesorado en Inglés"},
-      4: {nombre:"Diego Herrera", titulacion:"Profesorado en Matemática"},
-      5: {nombre:"Camila Ortiz", titulacion:"Licenciatura en Psicopedagogía"},
-      6: {nombre:"Facundo Molina", titulacion:"Profesorado en Música"},
-      7: {nombre:"Sofía Acosta", titulacion:"Profesorado en Educación Primaria"},
-      8: {nombre:"Emiliano Castro", titulacion:"Licenciatura en Ciencias de la Educación"}
-    };
-
-    const COMITES = [
-      {id:1, anio:2024, id_presidente:4, id_secretario:1, id_vocal:2},
-      {id:2, anio:2025, id_presidente:8, id_secretario:5, id_vocal:3},
-      {id:3, anio:2026, id_presidente:4, id_secretario:7, id_vocal:6}
+  (function() {
+    const profesores = [
+      {% for p in profesores %}
+        {
+          id: {{ p.id }},
+          nombre: "{{ p.nombre }}",
+          apellidos: "{{ p.apellidos }}",
+          nombre_completo: "{{ p.nombre_completo }}",
+          titulacion: "{{ p.titulacion }}",
+          tipo: "{{ p.tipo }}"
+        }{% if not forloop.last %},{% endif %}
+      {% endfor %}
     ];
 
-    function firma(rol, clase, idProfesor) {
-      const p = PROFESORES[idProfesor];
-      return `
-        <div class="firma">
-          <span class="firma-rol ${clase}">${rol}</span>
-          <span class="firma-nombre">${p.nombre}</span>
-          <span class="firma-titulo">${p.titulacion}</span>
-        </div>
-      `;
+    let currentStep = 0;
+    const totalSteps = 5;
+    const selections = { 1: null, 2: null, 3: null };
+    const roleNames = { 1: 'Presidente', 2: 'Secretario', 3: 'Vocal' };
+    const roleFields = { 1: 'field-presidente', 2: 'field-secretario', 3: 'field-vocal' };
+
+    function tipoClass(t) {
+      if (t === 'TUTOR') return 't-tutor';
+      if (t === 'ESPECIALISTA') return 't-especialista';
+      return 't-ambos';
     }
 
-    function render() {
-      const ordenadas = COMITES.slice().sort((a, b) => b.anio - a.anio);
-      document.getElementById('libro').innerHTML = ordenadas.map((c, i) => `
-        <section class="acta" style="--i:${i}">
-          <div class="acta-header">
-            <span class="acta-numero">Acta n.º ${String(c.id).padStart(2, '0')}</span>
-            <span class="acta-anio">${c.anio}</span>
-          </div>
-          <div class="firmas">
-            ${firma('Presidente', 'presidente', c.id_presidente)}
-            ${firma('Secretario', 'secretario', c.id_secretario)}
-            ${firma('Vocal', 'vocal', c.id_vocal)}
-          </div>
-        </section>
-      `).join('');
+    function renderGrid(step) {
+      const grid = document.getElementById('grid-' + step);
+      const usedIds = new Set();
+      for (let s = 1; s < step; s++) {
+        if (selections[s]) usedIds.add(selections[s]);
+      }
+
+      grid.innerHTML = '';
+      profesores.forEach(function(p) {
+        if (usedIds.has(p.id)) return;
+        const card = document.createElement('div');
+        card.className = 'wizard-card';
+        card.dataset.id = p.id;
+        if (selections[step] === p.id) card.classList.add('selected');
+        card.innerHTML =
+          '<span class="card-check">&#10003;</span>' +
+          '<div class="card-nombre">' + p.nombre_completo + '</div>' +
+          '<div class="card-titulo">' + p.titulacion + '</div>' +
+          '<span class="card-tipo ' + tipoClass(p.tipo) + '">' + p.tipo + '</span>';
+        card.addEventListener('click', function() {
+          selections[step] = p.id;
+          renderGrid(step);
+          renderChips(step);
+          updateButtons();
+        });
+        grid.appendChild(card);
+      });
     }
 
-    render();
+    function renderChips(step) {
+      const container = document.getElementById('chips-' + step);
+      container.innerHTML = '';
+      for (let s = 1; s < step; s++) {
+        if (!selections[s]) continue;
+        const prof = profesores.find(function(p) { return p.id === selections[s]; });
+        const chip = document.createElement('span');
+        chip.className = 'wizard-chip rol-' + (s === 1 ? 'presidente' : s === 2 ? 'secretario' : 'vocal');
+        chip.textContent = roleNames[s] + ': ' + prof.nombre_completo;
+        container.appendChild(chip);
+      }
+    }
+
+    function updateButtons() {
+      for (let s = 1; s <= 3; s++) {
+        var btn = document.getElementById('btn-next-' + s);
+        if (btn) btn.disabled = selections[s] === null;
+      }
+    }
+
+    function showStep(step) {
+      document.querySelectorAll('.wizard-panel').forEach(function(p) {
+        p.classList.remove('active');
+      });
+      document.getElementById('panel-' + step).classList.add('active');
+
+      document.querySelectorAll('.wizard-step').forEach(function(s) {
+        var idx = parseInt(s.dataset.step);
+        s.classList.remove('active', 'done');
+        if (idx === step) s.classList.add('active');
+        else if (idx < step) s.classList.add('done');
+      });
+    }
+
+    window.wizardNext = function() {
+      if (currentStep === 0) {
+        var year = document.getElementById('year-input').value;
+        if (!year || year < 2000 || year > 2100) {
+          document.getElementById('year-input').style.borderColor = '#a23b32';
+          return;
+        }
+        document.getElementById('year-input').style.borderColor = '';
+        document.getElementById('field-anio').value = year;
+      }
+      if (currentStep >= 1 && currentStep <= 3 && selections[currentStep] === null) return;
+
+      if (currentStep === 3) {
+        renderResumen();
+      }
+
+      currentStep++;
+      showStep(currentStep);
+
+      if (currentStep >= 1 && currentStep <= 3) {
+        renderGrid(currentStep);
+        renderChips(currentStep);
+        updateButtons();
+      }
+    };
+
+    window.wizardPrev = function() {
+      if (currentStep > 0) {
+        currentStep--;
+        showStep(currentStep);
+        if (currentStep >= 1 && currentStep <= 3) {
+          renderGrid(currentStep);
+          renderChips(currentStep);
+        }
+      }
+    };
+
+    function renderResumen() {
+      var html = '';
+      html += '<div class="wizard-resumen-item">' +
+        '<span class="wizard-resumen-label">Año</span>' +
+        '<span class="wizard-resumen-valor">' + document.getElementById('field-anio').value + '</span></div>';
+      [1, 2, 3].forEach(function(s) {
+        var prof = profesores.find(function(p) { return p.id === selections[s]; });
+        html += '<div class="wizard-resumen-item">' +
+          '<span class="wizard-resumen-label">' + roleNames[s] + '</span>' +
+          '<span class="wizard-resumen-valor">' + prof.nombre_completo + '</span></div>';
+      });
+      document.getElementById('resumen').innerHTML = html;
+    }
+
+    window.wizardSubmit = function() {
+      document.getElementById('field-anio').value = document.getElementById('year-input').value;
+      document.getElementById('field-presidente').value = selections[1];
+      document.getElementById('field-secretario').value = selections[2];
+      document.getElementById('field-vocal').value = selections[3];
+      document.getElementById('wizard-form').submit();
+    };
+
+  })();
   </script>
+
+
+  <!-- LIBRO DE ACTAS -->
+  {% for c in comites %}
+
+    <section class="acta" style="--i:{{ forloop.counter0 }}">
+
+      <div class="acta-header">
+
+        <span class="acta-numero">
+          Acta n.º {{ c.id|stringformat:"02d" }}
+        </span>
+
+        <span class="acta-anio">
+          {{ c.anio }}
+        </span>
+
+      </div>
+
+
+      <div class="firmas">
+
+        <!-- PRESIDENTE -->
+        <div class="firma">
+
+          <span class="firma-rol presidente">
+            Presidente
+          </span>
+
+          <span class="firma-nombre">
+            {{ c.presidente.nombre_completo }}
+          </span>
+
+          <span class="firma-titulo">
+            {{ c.presidente.titulacion }}
+          </span>
+
+        </div>
+
+
+        <!-- SECRETARIO -->
+        <div class="firma">
+
+          <span class="firma-rol secretario">
+            Secretario
+          </span>
+
+          <span class="firma-nombre">
+            {{ c.secretario.nombre_completo }}
+          </span>
+
+          <span class="firma-titulo">
+            {{ c.secretario.titulacion }}
+          </span>
+
+        </div>
+
+
+        <!-- VOCAL -->
+        <div class="firma">
+
+          <span class="firma-rol vocal">
+            Vocal
+          </span>
+
+          <span class="firma-nombre">
+            {{ c.vocal.nombre_completo }}
+          </span>
+
+          <span class="firma-titulo">
+            {{ c.vocal.titulacion }}
+          </span>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  {% empty %}
+
+    <div class="sin-comites">
+      No hay comités registrados.
+    </div>
+
+  {% endfor %}
+
 {% endblock %}
