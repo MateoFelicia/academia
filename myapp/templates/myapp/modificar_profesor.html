@@ -1,0 +1,54 @@
+{% extends "myapp/base.html" %}
+{% load static %}
+
+{% block title %}Modificar Profesor{% endblock %}
+{% block heading %}Modificar profesor{% endblock %}
+{% block subtitle %}Buscar y editar los datos de un profesor existente{% endblock %}
+
+{% block extra_style %}
+<link rel="stylesheet" href="{% static 'myapp/profesor.css' %}">
+{% endblock %}
+
+{% block content %}
+{% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<div class="modificar-area">
+    <h1>Modificar Profesor</h1>
+
+    <form method="get">
+        <div class="campo-grupo">
+            <label>DNI del profesor</label>
+            <input type="text" name="dni" placeholder="Ingrese DNI" required>
+        </div>
+        <button type="submit" name="buscar">Buscar</button>
+    </form>
+
+    {% if profesor %}
+    <hr>
+    <h2>Modificar: {{ profesor.dni }} — {{ profesor.nombre }}</h2>
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="campo-grupo">
+            <label>Matrícula (DNI)</label>
+            <input type="text" name="dni" value="{{ profesor.dni }}" required>
+        </div>
+
+        <div class="campo-grupo">
+            <label>Nombre</label>
+            <input type="text" name="nombre" value="{{ profesor.nombre }}" required>
+        </div>
+
+        <button type="submit" name="guardar">Guardar Cambios</button>
+    </form>
+    {% endif %}
+</div>
+{% endblock %}
