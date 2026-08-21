@@ -9,7 +9,9 @@ urlpatterns = [
     path("comite/", views.comite, name="comite"),
     path("comite/nuevo/", views.nuevo_comite, name="nuevo_comite"),
     path("profesores/", views.profesores, name="profesores"),
-    path("alumno/", views.alumnos, name="listado_alumno"),
+    path("alumno/", views.alumnos, name="alumnos"),
     path("alumno/nuevo/", views.nuevo_alumno, name="nuevo_alumno"),
+    path("alumno/modificar/", views.modificar_alumno, name="modificar_alumno"),
     path("profesores/nuevo/", views.nuevo_profesor, name="nuevo_profesor"),
+    path("profesores/modificar/", views.modificar_profesor, name="modificar_profesor"),
 ]

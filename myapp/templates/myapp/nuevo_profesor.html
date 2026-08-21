@@ -1,0 +1,29 @@
+{% extends "myapp/base.html" %}
+{% load static %}
+
+{% block title %}Nuevo profesor — Archivo académico{% endblock %}
+{% block heading %}Hoja de ingreso{% endblock %}
+{% block subtitle %}Alta de un nuevo profesor en la planta docente{% endblock %}
+
+{% block extra_style %}
+<link rel="stylesheet" href="{% static 'myapp/profesor.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="hoja">
+    <p class="hoja-numero">Formulario de alta · planta docente {{ now|default:"2026" }}</p>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Añadir profesor</button>
+    </form>
+</div>
+
+{% if guardado %}
+<div class="confirmacion">
+    Profesor guardado correctamente. ¿Querés seguir cargando?
+    <a class="primaria" href="{% url 'nuevo_profesor' %}">Sí, cargar otro</a>
+    <a class="secundaria" href="{% url 'profesores' %}">No, ver planta docente</a>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "myapp/base.html" %}
+{% load static %}
+
+{% block title %}Nuevo alumno — Archivo académico{% endblock %}
+{% block heading %}Hoja de ingreso{% endblock %}
+{% block subtitle %}Alta de un nuevo alumno en la matrícula{% endblock %}
+
+{% block extra_style %}
+<link rel="stylesheet" href="{% static 'myapp/alumno.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="hoja">
+    <p class="hoja-numero">Formulario de alta · matrícula {{ now|default:"2026" }}</p>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Añadir alumno</button>
+    </form>
+</div>
+
+{% if guardado %}
+<div class="confirmacion">
+    Alumno guardado correctamente. ¿Querés seguir cargando?
+    <a class="primaria" href="{% url 'nuevo_alumno' %}">Sí, cargar otro</a>
+    <a class="secundaria" href="{% url 'alumnos' %}">No, ver matrícula</a>
+</div>
+{% endif %}
+{% endblock %}

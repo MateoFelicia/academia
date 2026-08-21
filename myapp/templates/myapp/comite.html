@@ -5,6 +5,7 @@
 {% block subtitle %}Comités evaluadores registrados{% endblock %}
 
 {% block extra_style %}
+<style>
   main { max-width: 860px; }
 
   .formulario-comite {
@@ -393,6 +394,7 @@
       gap: 0.3rem;
     }
   }
+  </style>
 {% endblock %}
 
 {% block content %}
@@ -410,7 +412,9 @@
 
     {% if form.non_field_errors %}
       <div class="errores">
-        {{ form.non_field_errors }}
+        {% for error in form.non_field_errors %}
+          <p>{{ error }}</p>
+        {% endfor %}
       </div>
     {% endif %}
 
@@ -502,14 +506,14 @@
   (function() {
     const profesores = [
       {% for p in profesores %}
-        {
-          id: {{ p.id }},
-          nombre: "{{ p.nombre }}",
-          apellidos: "{{ p.apellidos }}",
-          nombre_completo: "{{ p.nombre_completo }}",
-          titulacion: "{{ p.titulacion }}",
-          tipo: "{{ p.tipo }}"
-        }{% if not forloop.last %},{% endif %}
+      {
+        id: {{ p.id }},
+        nombre: "{{ p.nombre|escapejs }}",
+        apellidos: "{{ p.apellidos|escapejs }}",
+        nombre_completo: "{{ p.nombre_completo|escapejs }}",
+        titulacion: "{{ p.titulacion|escapejs }}",
+        tipo: "{{ p.tipo|escapejs }}"
+      }{% if not forloop.last %},{% endif %}
       {% endfor %}
     ];
 
@@ -632,9 +636,10 @@
         '<span class="wizard-resumen-valor">' + document.getElementById('field-anio').value + '</span></div>';
       [1, 2, 3].forEach(function(s) {
         var prof = profesores.find(function(p) { return p.id === selections[s]; });
+        var nombreProf = prof ? prof.nombre_completo : '—';
         html += '<div class="wizard-resumen-item">' +
           '<span class="wizard-resumen-label">' + roleNames[s] + '</span>' +
-          '<span class="wizard-resumen-valor">' + prof.nombre_completo + '</span></div>';
+          '<span class="wizard-resumen-valor">' + nombreProf + '</span></div>';
       });
       document.getElementById('resumen').innerHTML = html;
     }

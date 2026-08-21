@@ -1,0 +1,54 @@
+{% extends "myapp/base.html" %}
+{% load static %}
+
+{% block title %}Modificar alumno{% endblock %}
+{% block heading %}Modificar alumno{% endblock %}
+{% block subtitle %}Buscar y editar los datos de un alumno existente{% endblock %}
+
+{% block extra_style %}
+<link rel="stylesheet" href="{% static 'myapp/alumno.css' %}">
+{% endblock %}
+
+{% block content %}
+{% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<div class="modificar-area">
+    <h1>Modificar Alumno</h1>
+
+    <form method="get">
+        <div class="campo-grupo">
+            <label>DNI del alumno</label>
+            <input type="text" name="dni" placeholder="Ingrese DNI" required>
+        </div>
+        <button type="submit" name="buscar">Buscar</button>
+    </form>
+
+    {% if alumno %}
+    <hr>
+    <h2>Modificar: {{ alumno.dni }} — {{ alumno.nombre }}</h2>
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="campo-grupo">
+            <label>Matrícula (DNI)</label>
+            <input type="text" name="dni" value="{{ alumno.dni }}" required>
+        </div>
+
+        <div class="campo-grupo">
+            <label>Nombre</label>
+            <input type="text" name="nombre" value="{{ alumno.nombre }}" required>
+        </div>
+
+        <button type="submit" name="guardar">Guardar Cambios</button>
+    </form>
+    {% endif %}
+</div>
+{% endblock %}

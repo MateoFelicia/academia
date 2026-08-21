@@ -1,0 +1,156 @@
+{% extends "myapp/base.html" %}
+
+{% block title %}Nuevo profesor — Archivo académico{% endblock %}
+{% block heading %}Hoja de ingreso{% endblock %}
+{% block subtitle %}Alta de un nuevo profesor en la planta docente{% endblock %}
+
+{% block extra_style %}
+.hoja {
+background: var(--paper);
+border: 1px solid var(--paper-line);
+border-radius: var(--radius);
+box-shadow: var(--shadow);
+padding: 1.6rem 1.8rem;
+max-width: 480px;
+animation: aparecer 0.45s ease both;
+}
+
+.hoja-numero {
+font-family: ui-monospace, 'SF Mono', 'Courier New', monospace;
+font-size: 0.68rem;
+letter-spacing: 0.06em;
+text-transform: uppercase;
+color: var(--ink-soft);
+border-bottom: 1px solid var(--paper-line);
+padding-bottom: 0.7rem;
+margin-bottom: 1.1rem;
+}
+
+form p { margin: 0 0 1rem; }
+
+form label {
+display: block;
+font-family: ui-monospace, 'SF Mono', 'Courier New', monospace;
+font-size: 0.68rem;
+text-transform: uppercase;
+letter-spacing: 0.05em;
+color: var(--ink-soft);
+margin-bottom: 0.3rem;
+}
+
+form input, form select {
+width: 100%;
+padding: 0.55rem 0.7rem;
+border: 1px solid var(--paper-line);
+border-radius: var(--radius);
+background: #fffdf7;
+color: var(--ink);
+font-size: 0.9rem;
+font-family: inherit;
+}
+
+form input:focus, form select:focus { border-color: var(--azul); }
+
+.errorlist {
+list-style: none;
+margin: 0.3rem 0 0;
+padding: 0;
+color: var(--rojo);
+font-size: 0.78rem;
+}
+
+button[type="submit"] {
+margin-top: 0.4rem;
+padding: 0.6rem 1.3rem;
+background: var(--ink);
+color: var(--paper);
+border: none;
+border-radius: var(--radius);
+font-size: 0.85rem;
+font-family: inherit;
+cursor: pointer;
+transition: opacity 0.15s ease;
+}
+button[type="submit"]:hover { opacity: 0.85; }
+
+.confirmacion {
+margin-top: 1.4rem;
+max-width: 480px;
+padding: 1rem 1.2rem;
+background: var(--verde-bg);
+color: #37421f;
+border: 1px solid rgba(92,107,63,0.35);
+border-radius: var(--radius);
+font-size: 0.88rem;
+animation: aparecer 0.35s ease both;
+}
+
+.confirmacion a {
+display: inline-block;
+margin-top: 0.6rem;
+margin-right: 0.6rem;
+padding: 0.4rem 0.9rem;
+border-radius: 999px;
+text-decoration: none;
+font-size: 0.78rem;
+}
+.confirmacion a.primaria { background: var(--verde); color: #fff; }
+.confirmacion a.secundaria { border: 1px solid rgba(92,107,63,0.4); color: #37421f; }
+{% endblock %}
+
+{% block content %}
+<div class="hoja">
+    <p class="hoja-numero">Formulario de alta · planta docente {{ now|default:"2026" }}</p>
+    <form method="post">
+        {% csrf_token %}
+        <p>
+            <label for="id_dni">DNI</label>
+            <input type="text" name="dni" id="id_dni" maxlength="10" required>
+        </p>
+        <p>
+            <label for="id_nombre">Nombre</label>
+            <input type="text" name="nombre" id="id_nombre" maxlength="100" required>
+        </p>
+        <p>
+            <label for="id_apellidos">Apellidos</label>
+            <input type="text" name="apellidos" id="id_apellidos" maxlength="100" required>
+        </p>
+        <p>
+            <label for="id_domicilio">Domicilio</label>
+            <input type="text" name="domicilio" id="id_domicilio" maxlength="150" required>
+        </p>
+        <p>
+            <label for="id_nivel">Nivel</label>
+            <select name="nivel" id="id_nivel" required>
+                <option value="">Seleccioná un nivel</option>
+                <option value="inicial">Inicial</option>
+                <option value="primario">Primario</option>
+                <option value="secundario">Secundario</option>
+                <option value="superior">Superior</option>
+            </select>
+        </p>
+        <p>
+            <label for="id_titulacion">Titulación</label>
+            <input type="text" name="titulacion" id="id_titulacion" maxlength="150" required>
+        </p>
+        <p>
+            <label for="id_tipo">Tipo</label>
+            <select name="tipo" id="id_tipo" required>
+                <option value="">Seleccioná un tipo</option>
+                <option value="titular">Titular</option>
+                <option value="suplente">Suplente</option>
+                <option value="interino">Interino</option>
+            </select>
+        </p>
+        <button type="submit">Añadir profesor</button>
+    </form>
+</div>
+
+{% if guardado %}
+<div class="confirmacion">
+    Profesor guardado correctamente. ¿Querés seguir cargando?
+    <a class="primaria" href="{% url 'nuevo_profesor' %}">Sí, cargar otro</a>
+    <a class="secundaria" href="{% url 'profesores' %}">No, ver planta docente</a>
+</div>
+{% endif %}
+{% endblock %}

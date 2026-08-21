@@ -1,118 +1,38 @@
 {% extends "myapp/base.html" %}
+{% load static %}
 
-{% block title %}Nuevo alumno — Archivo académico{% endblock %}
-{% block heading %}Hoja de ingreso{% endblock %}
-{% block subtitle %}Alta de un nuevo alumno en la matrícula{% endblock %}
+{% block title %}Matrícula — Archivo académico{% endblock %}
+{% block heading %}Libro de matrícula{% endblock %}
+{% block subtitle %}
+{{ alumnos|length }} alumno{{ alumnos|length|pluralize }} inscripto{{ alumnos|length|pluralize }}
+{% endblock %}
 
 {% block extra_style %}
-.hoja {
-background: var(--paper);
-border: 1px solid var(--paper-line);
-border-radius: var(--radius);
-box-shadow: var(--shadow);
-padding: 1.6rem 1.8rem;
-max-width: 480px;
-animation: aparecer 0.45s ease both;
-}
-
-.hoja-numero {
-font-family: ui-monospace, 'SF Mono', 'Courier New', monospace;
-font-size: 0.68rem;
-letter-spacing: 0.06em;
-text-transform: uppercase;
-color: var(--ink-soft);
-border-bottom: 1px solid var(--paper-line);
-padding-bottom: 0.7rem;
-margin-bottom: 1.1rem;
-}
-
-form p { margin: 0 0 1rem; }
-
-form label {
-display: block;
-font-family: ui-monospace, 'SF Mono', 'Courier New', monospace;
-font-size: 0.68rem;
-text-transform: uppercase;
-letter-spacing: 0.05em;
-color: var(--ink-soft);
-margin-bottom: 0.3rem;
-}
-
-form input, form select {
-width: 100%;
-padding: 0.55rem 0.7rem;
-border: 1px solid var(--paper-line);
-border-radius: var(--radius);
-background: #fffdf7;
-color: var(--ink);
-font-size: 0.9rem;
-font-family: inherit;
-}
-
-form input:focus, form select:focus { border-color: var(--azul); }
-
-.errorlist {
-list-style: none;
-margin: 0.3rem 0 0;
-padding: 0;
-color: var(--rojo);
-font-size: 0.78rem;
-}
-
-button[type="submit"] {
-margin-top: 0.4rem;
-padding: 0.6rem 1.3rem;
-background: var(--ink);
-color: var(--paper);
-border: none;
-border-radius: var(--radius);
-font-size: 0.85rem;
-font-family: inherit;
-cursor: pointer;
-transition: opacity 0.15s ease;
-}
-button[type="submit"]:hover { opacity: 0.85; }
-
-.confirmacion {
-margin-top: 1.4rem;
-max-width: 480px;
-padding: 1rem 1.2rem;
-background: var(--verde-bg);
-color: #37421f;
-border: 1px solid rgba(92,107,63,0.35);
-border-radius: var(--radius);
-font-size: 0.88rem;
-animation: aparecer 0.35s ease both;
-}
-
-.confirmacion a {
-display: inline-block;
-margin-top: 0.6rem;
-margin-right: 0.6rem;
-padding: 0.4rem 0.9rem;
-border-radius: 999px;
-text-decoration: none;
-font-size: 0.78rem;
-}
-.confirmacion a.primaria { background: var(--verde); color: #fff; }
-.confirmacion a.secundaria { border: 1px solid rgba(92,107,63,0.4); color: #37421f; }
+<link rel="stylesheet" href="{% static 'myapp/alumno.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="hoja">
-    <p class="hoja-numero">Formulario de alta · matrícula {{ now|default:"2026" }}</p>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Añadir alumno</button>
-    </form>
+{% if alumnos %}
+<div class="grid">
+    {% for a in alumnos %}
+    <article class="ficha" style="--i: {{ forloop.counter0 }}">
+        <div class="ficha-top">
+            <div>
+                <div class="ficha-nombre">{{ a.nombre }} {{ a.apellidos }}</div>
+                <div class="ficha-dni">DNI {{ a.dni }}</div>
+            </div>
+            <span class="sello-badge {% cycle 'azul' 'rojo' 'verde' %}">Grupo {{ a.id_grupo }}</span>
+        </div>
+        <dl class="ficha-datos">
+            <dt>Legajo</dt>
+            <dd>#{{ forloop.counter }}</dd>
+        </dl>
+    </article>
+    {% endfor %}
 </div>
-
-{% if guardado %}
-<div class="confirmacion">
-    Alumno guardado correctamente. ¿Querés seguir cargando?
-    <a class="primaria" href="{% url 'nuevo_alumno' %}">Sí, cargar otro</a>
-    <a class="secundaria" href="{% url 'listado_alumno' %}">No, ver matrícula</a>
-</div>
+{% else %}
+<p class="vacio">Todavía no hay alumnos cargados.</p>
 {% endif %}
+<a class="link-alta" href="{% url 'nuevo_alumno' %}">← Cargar otro alumno</a>
+<a class="link-alta" href="{% url 'modificar_alumno' %}">← modificar un alumno</a>
 {% endblock %}
