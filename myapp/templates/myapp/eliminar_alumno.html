@@ -1,0 +1,42 @@
+{% extends "myapp/base.html" %}
+{% load static %}
+
+{% block title %}Eliminar alumno{% endblock %}
+{% block heading %}Eliminar alumno{% endblock %}
+{% block subtitle %}Buscar y dar de baja a un alumno existente{% endblock %}
+
+{% block extra_style %}
+<link rel="stylesheet" href="{% static 'myapp/alumno.css' %}">
+{% endblock %}
+
+{% block content %}
+{% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<div class="modificar-area">
+    <h1>Eliminar Alumno</h1>
+
+    <form method="get">
+        <div class="campo-grupo">
+            <label>DNI del alumno</label>
+            <input type="text" name="dni" placeholder="Ingrese DNI" required>
+        </div>
+        <button type="submit" name="buscar">Buscar</button>
+    </form>
+
+    {% if alumno %}
+    <hr>
+    <h2>Eliminar: {{ alumno.dni }} — {{ alumno.nombre }}</h2>
+    <form method="post" onsubmit="return confirm('¿Seguro que querés eliminar a {{ alumno.nombre }}? No se puede deshacer.');">
+        {% csrf_token %}
+        <input type="hidden" name="dni" value="{{ alumno.dni }}">
+        <button type="submit" name="eliminar">Eliminar Alumno</button>
+    </form>
+    {% endif %}
+</div>
+{% endblock %}

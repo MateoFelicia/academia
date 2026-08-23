@@ -5,102 +5,10 @@
 {% block subtitle %}{{ candidatos|length }} candidato{{ candidatos|length|pluralize }} en proceso · datos de muestra, no
 reales{% endblock %}
 
+{% load static %}
+
 {% block extra_style %}
-<style>
-.grid {
-display: grid;
-grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
-gap: 1.1rem;
-}
-
-.ficha {
-position: relative;
-background: var(--paper);
-border: 1px solid var(--paper-line);
-border-radius: var(--radius);
-padding: 1.1rem 1.2rem 1.1rem 2.15rem;
-box-shadow: var(--shadow);
-animation: aparecer 0.45s ease both;
-animation-delay: calc(var(--i, 0) * 45ms);
-transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.ficha:hover { transform: translateY(-3px); }
-
-.ficha::before, .ficha::after {
-content: "";
-position: absolute;
-left: 0.8rem;
-width: 0.5rem;
-height: 0.5rem;
-border-radius: 50%;
-background: var(--bg);
-box-shadow: inset 0 1px 2px rgba(0,0,0,0.45);
-}
-.ficha::before { top: 1.15rem; }
-.ficha::after { bottom: 1.15rem; }
-
-.ficha-top {
-display: flex;
-justify-content: space-between;
-align-items: flex-start;
-gap: 0.6rem;
-margin-bottom: 0.65rem;
-}
-
-.ficha-nombre { font-family: Georgia, serif; font-weight: 600; font-size: 1.02rem; color: var(--ink); }
-.ficha-dni {
-font-family: ui-monospace, 'SF Mono', 'Courier New', monospace;
-color: var(--ink-soft);
-font-size: 0.74rem;
-margin-top: 0.2rem;
-}
-
-.sello-badge {
-position: relative;
-display: inline-block;
-font-family: ui-monospace, 'SF Mono', 'Courier New', monospace;
-font-size: 0.63rem;
-font-weight: 700;
-letter-spacing: 0.05em;
-text-transform: uppercase;
-padding: 0.22rem 0.55rem;
-border: 1.5px solid currentColor;
-border-radius: 999px;
-transform: rotate(-3deg);
-white-space: nowrap;
-}
-.sello-badge::before {
-content: "";
-position: absolute;
-inset: 2px;
-border: 1px solid currentColor;
-border-radius: 999px;
-opacity: 0.45;
-}
-.sello-badge.azul { color: var(--azul); background: var(--azul-bg); }
-.sello-badge.rojo { color: var(--rojo); background: var(--rojo-bg); }
-.sello-badge.verde { color: var(--verde); background: var(--verde-bg); }
-
-dl.ficha-datos {
-margin: 0.75rem 0 0;
-display: grid;
-grid-template-columns: auto 1fr;
-gap: 0.32rem 0.6rem;
-font-size: 0.81rem;
-color: var(--ink);
-}
-dl.ficha-datos dt { color: var(--ink-soft); }
-dl.ficha-datos dd { margin: 0; }
-
-.vacio {
-color: var(--bg-text-soft);
-font-size: 0.88rem;
-border: 1px dashed rgba(237,231,214,0.3);
-border-radius: var(--radius);
-padding: 1.4rem;
-}
-</style>
+<link rel="stylesheet" href="{% static 'myapp/candidato.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -123,10 +31,13 @@ padding: 1.4rem;
             <dt>Legajo</dt>
             <dd>#{{ c.id }}</dd>
         </dl>
+        <a class="editar-link" href="{% url 'detalle_candidato' c.id %}">Ver ficha →</a>
+        <a class="editar-link" href="{% url 'editar_candidato' c.id %}">Editar →</a>
     </article>
     {% endfor %}
 </div>
 {% else %}
 <p class="vacio">Ninguna ficha coincide con este filtro. Todavía no hay candidatos cargados.</p>
 {% endif %}
+<a class="link-alta" href="{% url 'nuevo_candidato' %}">← Cargar otro candidato</a>
 {% endblock %}

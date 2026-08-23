@@ -153,13 +153,16 @@
         <nav class="tabs">
             <a href="{% url 'index' %}" {% if active_tab == 'index' %}class="active" {% endif %}>Portada</a>
             <a href="{% url 'candidatos' %}" {% if active_tab == 'candidatos' %}class="active" {% endif %}>Candidatos</a>
+            <a href="{% url 'nuevo_candidato' %}" {% if active_tab == 'candidatos' %}class="active" {% endif %}>Candidato nuevo</a>
             <a href="{% url 'comite' %}" {% if active_tab == 'comite' %}class="active" {% endif %}>Comités</a>
             <a href="{% url 'alumnos' %}" {% if active_tab == 'alumnos' %}class="active" {% endif %}>Alumnos</a>
             <a href="{% url 'nuevo_alumno' %}" {% if active_tab == 'nuevo_alumno' %}class="active" {% endif %}>Alumno nuevo</a>
             <a href="{% url 'modificar_alumno' %}" {% if active_tab == 'modificar_alumno' %}class="active" {% endif %}>Modificar Alumno</a>
+            <a href="{% url 'eliminar_alumno' %}">Eliminar Alumno</a>
             <a href="{% url 'profesores' %}" {% if active_tab == 'profesores' %}class="active" {% endif %}>Profesores</a>
             <a href="{% url 'nuevo_profesor' %}" {% if active_tab == 'nuevo_profesor' %}class="active" {% endif %}>Profesor nuevo</a>
             <a href="{% url 'modificar_profesor' %}" {% if active_tab == 'modificar_profesor' %}class="active" {% endif %}>Modificar Profesor</a>
+            <a href="{% url 'eliminar_profesor' %}">Eliminar Profesor</a>
         </nav>
     </header>
     <main>

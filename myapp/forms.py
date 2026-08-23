@@ -1,4 +1,5 @@
 from django import forms
+from .models import Candidato, Llamada, Entrevista
 
 
 class AlumnoForm(forms.Form):
@@ -43,11 +44,32 @@ class ComiteForm(forms.Form):
             )
         return cleaned
 
-class CandidatosForm(forms.Form): #actualizar con como son los candidatos
-    dni = forms.CharField(label="DNI", max_length=15)
-    nombre = forms.CharField(label="Nombre", max_length=60)
-    apellidos = forms.CharField(label="Apellidos", max_length=80)
-    id_grupo = forms.IntegerField(label="ID de grupo")
+class CandidatoForm(forms.ModelForm):
+    class Meta:
+        model = Candidato
+        fields = ['dni', 'nombre', 'apellidos', 'curriculum', 'tipo_deseado', 'materias']
+        widgets = {
+            'materias': forms.CheckboxSelectMultiple,
+        }
+
+class LlamadaForm(forms.ModelForm):
+    fecha_hora = forms.DateTimeField(
+        widget=forms.DateTimeInput(attrs={'type': 'datetime-local'}, format='%Y-%m-%dT%H:%M'),
+        input_formats=['%Y-%m-%dT%H:%M'],
+    )
+
+    class Meta:
+        model = Llamada
+        fields = ['fecha_hora', 'disposicion']
+
+class EntrevistaForm(forms.ModelForm):
+    class Meta:
+        model = Entrevista
+        fields = ['fecha', 'materia_a_cubrir', 'valoracion']
+        widgets = {
+            'fecha': forms.DateInput(attrs={'type': 'date'}),
+        }
+
 class ProfesorForm(forms.Form): 
     dni = forms.CharField(max_length=10)
     nombre = forms.CharField(max_length=100)
@@ -65,3 +87,6 @@ class ProfesorForm(forms.Form):
         ("suplente", "Suplente"),
         ("interino", "Interino"),
     ])
+
+class BuscarDNIForm(forms.Form):
+    dni = forms.CharField(label="DNI", max_length=15)

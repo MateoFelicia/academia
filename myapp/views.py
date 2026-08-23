@@ -1,9 +1,7 @@
-from django.shortcuts import render, redirect
 from django.db import connection
 from django.contrib import messages
 from itertools import count
-
-from .mock_candidatos import listar_candidatos
+from django.shortcuts import render, redirect, get_object_or_404
 
 from .mock_comite import (
     ComiteMock,
@@ -13,6 +11,8 @@ from .mock_comite import (
     listar_profesores_mock,
 )
 from .forms import *
+
+from .models import Candidato
 
 
 _id_comites = count(len(COMITES_MOCK) + 1)
@@ -26,7 +26,85 @@ def index(request):
 
 def candidatos(request):
     return render(request, "myapp/candidatos.html", {
-        "candidatos": listar_candidatos(),
+        "candidatos": Candidato.objects.all().order_by('apellidos', 'nombre'),
+        "active_tab": "candidatos",
+    })
+
+
+def nuevo_candidato(request):
+    guardado = False
+
+    if request.method == "POST":
+        form = CandidatoForm(request.POST)
+
+        if form.is_valid():
+            form.save()
+            guardado = True
+            form = CandidatoForm()
+
+    else:
+        form = CandidatoForm()
+
+    return render(request, "myapp/nuevo_candidato.html", {
+        "form": form,
+        "guardado": guardado,
+        "active_tab": "candidatos",
+    })
+
+
+def editar_candidato(request, pk):
+    candidato = get_object_or_404(Candidato, pk=pk)
+
+    if request.method == "POST":
+        form = CandidatoForm(request.POST, instance=candidato)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Candidato actualizado correctamente.")
+            return redirect('candidatos')
+    else:
+        form = CandidatoForm(instance=candidato)
+
+    return render(request, "myapp/editar_candidato.html", {
+        "form": form,
+        "candidato": candidato,
+        "active_tab": "candidatos",
+    })
+
+
+def detalle_candidato(request, pk):
+    candidato = get_object_or_404(Candidato, pk=pk)
+    form_llamada = LlamadaForm()
+
+    if request.method == "POST" and request.POST.get("accion") == "llamada":
+        form_llamada = LlamadaForm(request.POST)
+        if form_llamada.is_valid():
+            llamada = form_llamada.save(commit=False)
+            llamada.candidato = candidato
+            llamada.save()
+            messages.success(request, "Llamada registrada correctamente.")
+            return redirect('detalle_candidato', pk=candidato.pk)
+
+    elif request.method == "POST" and request.POST.get("accion") == "entrevista":
+        llamada = get_object_or_404(Llamada, pk=request.POST.get("llamada_id"), candidato=candidato)
+        form_entrevista = EntrevistaForm(request.POST)
+        if form_entrevista.is_valid():
+            entrevista = form_entrevista.save(commit=False)
+            entrevista.llamada = llamada
+            entrevista.save()
+            messages.success(request, "Entrevista registrada correctamente.")
+        else:
+            messages.error(request, "No se pudo guardar la entrevista: revisá los datos.")
+        return redirect('detalle_candidato', pk=candidato.pk)
+
+    llamadas = list(candidato.llamadas.order_by('-fecha_hora'))
+    for llamada in llamadas:
+        if llamada.puede_cargar_entrevista:
+            llamada.form_entrevista = EntrevistaForm()
+
+    return render(request, "myapp/detalle_candidato.html", {
+        "candidato": candidato,
+        "llamadas": llamadas,
+        "form_llamada": form_llamada,
         "active_tab": "candidatos",
     })
 
@@ -177,6 +255,39 @@ def modificar_alumno(request):
 
     return render(request, "myapp/modificar_alumno.html", contexto)
 
+def eliminar_alumno(request):
+    alumno = None
+    form_buscar = BuscarDNIForm(request.GET or None)
+
+    try:
+        if request.method == "POST" and "eliminar" in request.POST:
+            dni = request.POST.get("dni")
+            if dni:
+                with connection.cursor() as cursor:
+                    cursor.execute("DELETE FROM datos_personales WHERE dni = %s", [dni])
+                messages.success(request, "Alumno eliminado correctamente.")
+                return redirect('alumnos')
+            else:
+                messages.error(request, "Falta el DNI.")
+
+        if "buscar" in request.GET:
+            if form_buscar.is_valid():
+                dni = form_buscar.cleaned_data["dni"]
+                with connection.cursor() as cursor:
+                    cursor.execute("SELECT dni, nombre FROM datos_personales WHERE dni = %s", [dni])
+                    alumno = cursor.fetchone()
+                if not alumno:
+                    messages.warning(request, "No se encontró ningún alumno con ese DNI.")
+
+    except Exception as e:
+        messages.error(request, f"Error en la base de datos: {str(e)}")
+
+    return render(request, "myapp/eliminar_alumno.html", {
+        "form_buscar": form_buscar,
+        "alumno": {"dni": alumno[0], "nombre": alumno[1]} if alumno else None,
+        "active_tab": "alumnos",
+    })
+
 def profesores(request):
     with connection.cursor() as cursor:
         cursor.execute("SELECT dni, nombre, apellidos,titulacion,tipo FROM profesor")
@@ -259,3 +370,36 @@ def modificar_profesor(request):
     }
 
     return render(request, "myapp/modificar_profesor.html", contexto)
+
+def eliminar_profesor(request):
+    profesor = None
+    form_buscar = BuscarDNIForm(request.GET or None)
+
+    try:
+        if request.method == "POST" and "eliminar" in request.POST:
+            dni = request.POST.get("dni")
+            if dni:
+                with connection.cursor() as cursor:
+                    cursor.execute("DELETE FROM datos_personales WHERE dni = %s", [dni])
+                messages.success(request, "Profesor eliminado correctamente.")
+                return redirect('profesores')
+            else:
+                messages.error(request, "Falta el DNI.")
+
+        if "buscar" in request.GET:
+            if form_buscar.is_valid():
+                dni = form_buscar.cleaned_data["dni"]
+                with connection.cursor() as cursor:
+                    cursor.execute("SELECT dni, nombre FROM datos_personales WHERE dni = %s", [dni])
+                    profesor = cursor.fetchone()
+                if not profesor:
+                    messages.warning(request, "No se encontró ningún profesor con ese DNI.")
+
+    except Exception as e:
+        messages.error(request, f"Error en la base de datos: {str(e)}")
+
+    return render(request, "myapp/eliminar_profesor.html", {
+        "form_buscar": form_buscar,
+        "profesor": {"dni": profesor[0], "nombre": profesor[1]} if profesor else None,
+        "active_tab": "profesores",
+    })

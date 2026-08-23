@@ -1,0 +1,29 @@
+{% extends "myapp/base.html" %}
+{% load static %}
+
+{% block title %}Nuevo candidato — Archivo académico{% endblock %}
+{% block heading %}Ficha de postulación{% endblock %}
+{% block subtitle %}Alta de un nuevo candidato al proceso de selección{% endblock %}
+
+{% block extra_style %}
+<link rel="stylesheet" href="{% static 'myapp/candidato.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="hoja">
+    <p class="hoja-numero">Formulario de alta · postulantes</p>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Añadir candidato</button>
+    </form>
+</div>
+
+{% if guardado %}
+<div class="confirmacion">
+    Candidato guardado correctamente. ¿Querés seguir cargando?
+    <a class="primaria" href="{% url 'nuevo_candidato' %}">Sí, cargar otro</a>
+    <a class="secundaria" href="{% url 'candidatos' %}">No, ver fichero</a>
+</div>
+{% endif %}
+{% endblock %}
