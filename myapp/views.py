@@ -45,7 +45,7 @@ def nuevo_alumno(request):
                 cursor.execute(
                     """INSERT INTO alumno (dni, nombre, apellidos,id_grupo)
                     VALUES (%s, %s, %s)""",
-                    [form.cleaned_data["dni"], form.cleaned_data["nombre"], form.cleaned_data["apellidos"], form.cleaned_data["id_grupo"]]
+                    [form.cleaned_data["dni"], form.cleaned_data["nombre"], form.cleaned_data["apellidos"]]
                 )
             guardado = True
             form = AlumnoForm()  # formulario limpio para cargar otro

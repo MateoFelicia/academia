@@ -6,6 +6,9 @@ class AlumnoForm(forms.Form):
     nombre = forms.CharField(label="Nombre", max_length=60)
     apellidos = forms.CharField(label="Apellidos", max_length=80)
     id_grupo = forms.IntegerField(label="ID de grupo")
+    
+    class Meta:
+        db_table = 'alumno'
 
 class ProfesorForm(forms.Form): 
     dni = forms.CharField(max_length=10)
