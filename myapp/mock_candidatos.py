@@ -1,197 +1,145 @@
 """
 mock_candidatos.py
 
-Base de datos en memoria para el flujo de candidatos: reemplaza
-temporalmente a models.py + services.py (Django ORM) para poder
-mostrar el proyecto funcionando sin migraciones ni DB real.
-Todos los datos viven en listas de Python y se pierden al reiniciar
-el servidor.
+Datos en memoria para el sector de Candidatos (postulantes a dar clases),
+armado con el mismo criterio que mock_comite.py: nada de esto toca la
+base de datos real, todo vive en listas de Python y se pierde al
+reiniciar el servidor. Reemplaza tanto a los viejos models.py
+(Candidato, Llamada, Entrevista, Materia) como al SQL crudo que los
+sustituyó después, para que este sector funcione exactamente igual que
+Comité: sin conexión a MySQL de por medio.
 
-Este es el módulo que necesita templates/myapp/candidatos.html:
-itera `candidatos` y usa c.dni, c.nombre, c.apellidos, c.tipo_deseado.
-
-Para usarlo en views.py:
-    from .mock_candidatos import listar_candidatos, crear_candidato, ...
-
-Los templates no necesitan cambios: Django accede a los atributos de
-estos objetos (c.dni, c.nombre, etc.) igual que accedería a un objeto
-del ORM.
+Uso dataclasses en vez de dicts sueltos por la misma razón que en
+mock_comite.py: dan __repr__, comparación por valor y autocompletado
+gratis, documentando la forma de cada entidad igual que lo haría un
+modelo real.
 """
 
-from dataclasses import dataclass
-from datetime import datetime
-from itertools import count
+from __future__ import annotations
+from dataclasses import dataclass, field
+from datetime import date, datetime, timezone
 
-
-# ---------- Contadores de ID (simulan el autoincremental de una BD real) ----------
-
-_id_candidatos = count(1)
-_id_asignaturas = count(1)
-_id_comites = count(1)
-_id_candidato_materia = count(1)
-_id_llamadas = count(1)
-_id_entrevistas = count(1)
-
-
-# ---------- "Tablas" (clases) ----------
 
 @dataclass
-class Candidato:
+class MateriaMock:
+    id: int
+    nombre: str
+
+
+@dataclass
+class CandidatoMock:
     id: int
     dni: str
     nombre: str
     apellidos: str
-    curriculum: str | None = None
-    tipo_deseado: str | None = None
+    curriculum: str = ""
+    tipo_deseado: str = ""
+    materias: list[int] = field(default_factory=list)  # ids de MateriaMock
+
+    @property
+    def nombre_completo(self) -> str:
+        return f"{self.nombre} {self.apellidos}"
 
 
 @dataclass
-class Asignatura:
+class LlamadaMock:
     id: int
-    nombre: str
-
-
-@dataclass
-class Comite:
-    id: int
-    nombre: str
-
-
-@dataclass
-class CandidatoMateria:
-    id: int
-    id_candidato: int
-    id_asignatura: int
-
-
-@dataclass
-class Llamada:
-    id: int
-    id_candidato: int
+    candidato_id: int
     fecha_hora: datetime
-    disposicion: str | None = None
+    disposicion: str  # 'no_localizado' | 'no_interesado' | 'concertada'
 
 
 @dataclass
-class Entrevista:
+class EntrevistaMock:
     id: int
-    id_candidato: int
-    id_llamada: int
-    fecha: datetime
-    id_asignatura: int
-    valoracion: str | None = None
-    id_comite: int | None = None
+    llamada_id: int  # OneToOne real: a lo sumo una entrevista por llamada
+    fecha: date
+    materia_a_cubrir_id: int
+    valoracion: int
 
 
-# ---------- Almacenamiento en memoria ----------
+MATERIAS_MOCK: list[MateriaMock] = [
+    MateriaMock(1, "Matemática"),
+    MateriaMock(2, "Lengua y Literatura"),
+    MateriaMock(3, "Inglés"),
+    MateriaMock(4, "Educación Física"),
+    MateriaMock(5, "Historia"),
+    MateriaMock(6, "Biología"),
+    MateriaMock(7, "Química"),
+    MateriaMock(8, "Informática"),
+]
 
-candidatos: list[Candidato] = []
-asignaturas: list[Asignatura] = []
-comites: list[Comite] = []
-candidato_materias: list[CandidatoMateria] = []
-llamadas: list[Llamada] = []
-entrevistas: list[Entrevista] = []
+CANDIDATOS_MOCK: list[CandidatoMock] = [
+    CandidatoMock(
+        1, "30111222", "Julieta", "Medina",
+        "Profesorado en Matemática, 3 años de experiencia en secundario.",
+        "tutor", materias=[1, 8],
+    ),
+    CandidatoMock(
+        2, "28444555", "Ramiro", "Suárez",
+        "Licenciado en Letras, dicta talleres de escritura creativa.",
+        "especialista", materias=[2],
+    ),
+    CandidatoMock(
+        3, "31666777", "Agostina", "Peralta",
+        "Profesora de Inglés, certificación First Certificate.",
+        "ambos", materias=[3],
+    ),
+    CandidatoMock(
+        4, "29888999", "Tomás", "Ibáñez",
+        "Profesor de Educación Física, entrenador de vóley juvenil.",
+        "tutor", materias=[4],
+    ),
+]
+
+LLAMADAS_MOCK: list[LlamadaMock] = [
+    # El proyecto tiene USE_TZ = True, así que LlamadaForm siempre entrega
+    # datetimes con tzinfo. Estos datos de ejemplo también lo necesitan;
+    # si no, sorted() explota al mezclar naive con aware.
+    LlamadaMock(1, candidato_id=1,
+                fecha_hora=datetime(2026, 8, 20, 10, 30, tzinfo=timezone.utc),
+                disposicion="concertada"),
+    LlamadaMock(2, candidato_id=2,
+                fecha_hora=datetime(2026, 8, 22, 15, 0, tzinfo=timezone.utc),
+                disposicion="no_localizado"),
+]
+
+ENTREVISTAS_MOCK: list[EntrevistaMock] = [
+    EntrevistaMock(1, llamada_id=1, fecha=date(2026, 8, 27),
+                   materia_a_cubrir_id=1, valoracion=4),
+]
 
 
-# ---------- Candidatos ----------
-
-def listar_candidatos():
-    return candidatos
+def listar_candidatos_mock() -> list[CandidatoMock]:
+    return CANDIDATOS_MOCK
 
 
-def crear_candidato(dni, nombre, apellidos, curriculum=None, tipo_deseado=None):
-    c = Candidato(
-        id=next(_id_candidatos), dni=dni, nombre=nombre, apellidos=apellidos,
-        curriculum=curriculum, tipo_deseado=tipo_deseado,
-    )
-    candidatos.append(c)
-    return c
+def listar_materias_mock() -> list[MateriaMock]:
+    return MATERIAS_MOCK
 
 
-def actualizar_candidato(id_c, dni=None, nombre=None, apellidos=None,
-                          curriculum=None, tipo_deseado=None):
-    c = next((x for x in candidatos if x.id == id_c), None)
-    if not c:
+def obtener_candidato_mock(id_candidato: int) -> CandidatoMock | None:
+    return next((c for c in CANDIDATOS_MOCK if c.id == id_candidato), None)
+
+
+def obtener_materia_mock(id_materia: int) -> MateriaMock | None:
+    return next((m for m in MATERIAS_MOCK if m.id == id_materia), None)
+
+
+def obtener_llamada_mock(id_llamada, id_candidato: int) -> LlamadaMock | None:
+    """Busca una llamada por id validando que sea del candidato indicado,
+    igual que el WHERE id = %s AND candidato_id = %s que hacía la
+    versión en SQL crudo."""
+    try:
+        id_llamada = int(id_llamada)
+    except (TypeError, ValueError):
         return None
-    if dni:
-        c.dni = dni
-    if nombre:
-        c.nombre = nombre
-    if apellidos:
-        c.apellidos = apellidos
-    if curriculum:
-        c.curriculum = curriculum
-    if tipo_deseado:
-        c.tipo_deseado = tipo_deseado
-    return c
-
-
-def eliminar_candidato(id_c):
-    c = next((x for x in candidatos if x.id == id_c), None)
-    if c:
-        candidatos.remove(c)
-    return c
-
-
-def agregar_materia_candidato(id_candidato, id_asignatura):
-    cm = CandidatoMateria(
-        id=next(_id_candidato_materia),
-        id_candidato=id_candidato,
-        id_asignatura=id_asignatura,
+    return next(
+        (l for l in LLAMADAS_MOCK if l.id == id_llamada and l.candidato_id == id_candidato),
+        None,
     )
-    candidato_materias.append(cm)
-    return cm
 
 
-# ---------- Llamadas ----------
-
-def listar_llamadas():
-    return llamadas
-
-
-def crear_llamada(id_candidato, fecha_hora, disposicion=None):
-    ll = Llamada(
-        id=next(_id_llamadas), id_candidato=id_candidato,
-        fecha_hora=fecha_hora, disposicion=disposicion,
-    )
-    llamadas.append(ll)
-    return ll
-
-
-# ---------- Entrevistas ----------
-
-def listar_entrevistas():
-    return entrevistas
-
-
-def crear_entrevista(id_candidato, id_llamada, fecha, id_asignatura,
-                      valoracion=None, id_comite=None):
-    e = Entrevista(
-        id=next(_id_entrevistas), id_candidato=id_candidato, id_llamada=id_llamada,
-        fecha=fecha, id_asignatura=id_asignatura, valoracion=valoracion,
-        id_comite=id_comite,
-    )
-    entrevistas.append(e)
-    return e
-
-
-# ---------- Asignaturas ----------
-
-def listar_asignaturas():
-    return asignaturas
-
-
-# ---------- Datos de ejemplo para que la demo no arranque vacía ----------
-
-def _cargar_datos_de_ejemplo():
-    asignaturas.append(Asignatura(id=next(_id_asignaturas), nombre="Programación"))
-    asignaturas.append(Asignatura(id=next(_id_asignaturas), nombre="Redes"))
-    comites.append(Comite(id=next(_id_comites), nombre="Comité Técnico"))
-
-    crear_candidato(dni="30111222", nombre="Juan", apellidos="Pérez",
-                     curriculum="CV de prueba", tipo_deseado="Full Stack")
-    crear_candidato(dni="30333444", nombre="Ana", apellidos="Gómez",
-                     curriculum="CV de prueba", tipo_deseado="Backend")
-
-
-_cargar_datos_de_ejemplo()
+def entrevista_de_llamada_mock(id_llamada: int) -> EntrevistaMock | None:
+    """Resuelve el OneToOne Llamada -> Entrevista (hay a lo sumo una)."""
+    return next((e for e in ENTREVISTAS_MOCK if e.llamada_id == id_llamada), None)
