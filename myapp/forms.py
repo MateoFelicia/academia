@@ -1,5 +1,48 @@
 from django import forms
-from .models import Candidato, Llamada, Entrevista
+from django.db import connection
+
+
+class ProfesorForm(forms.Form): 
+    dni = forms.CharField(max_length=10)
+    nombre = forms.CharField(max_length=100)
+    apellidos = forms.CharField(max_length=100)
+    domicilio = forms.CharField(max_length=150)
+    nivel_estudios = forms.ChoiceField(choices=[
+        ("inicial", "Inicial"),
+        ("primario", "Primario"),
+        ("secundario", "Secundario"),
+        ("Universitarios", "Universitario"),
+    ])
+    titulacion = forms.CharField(max_length=150)
+    tipo = forms.ChoiceField(choices=[
+        ("titular", "Titular"),
+        ("suplente", "Suplente"),
+        ("interino", "Interino"),
+    ])
+
+class BuscarDNIForm(forms.Form):
+    dni = forms.CharField(label="DNI", max_length=15)
+
+from django import forms
+from django.db import connection
+
+TIPO_DESEADO_CHOICES = [
+    ('tutor', 'Tutor'),
+    ('especialista', 'Especialista'),
+    ('ambos', 'Ambos'),
+]
+
+DISPOSICION_CHOICES = [
+    ('no_localizado', 'No localizado'),
+    ('no_interesado', 'No está interesado'),
+    ('concertada', 'Entrevista concertada'),
+]
+
+
+def _choices_materias():
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT id, nombre FROM myapp_materia ORDER BY nombre")
+        return [(str(id_), nombre) for id_, nombre in cursor.fetchall()]
 
 
 class AlumnoForm(forms.Form):
@@ -44,31 +87,66 @@ class ComiteForm(forms.Form):
             )
         return cleaned
 
-class CandidatoForm(forms.ModelForm):
-    class Meta:
-        model = Candidato
-        fields = ['dni', 'nombre', 'apellidos', 'curriculum', 'tipo_deseado', 'materias']
-        widgets = {
-            'materias': forms.CheckboxSelectMultiple,
-        }
+class CandidatoForm(forms.Form):
+    dni = forms.CharField(label="DNI", max_length=9)
+    nombre = forms.CharField(label="Nombre", max_length=80)
+    apellidos = forms.CharField(label="Apellidos", max_length=80)
+    curriculum = forms.CharField(label="Currículum", max_length=255, required=False)
+    tipo_deseado = forms.ChoiceField(
+        label="Tipo deseado",
+        required=False,
+        choices=[('', '—')] + TIPO_DESEADO_CHOICES,
+    )
+    materias = forms.MultipleChoiceField(
+        label="Materias",
+        required=False,
+        widget=forms.CheckboxSelectMultiple,
+    )
 
-class LlamadaForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["materias"].choices = _choices_materias()
+
+
+class BuscarCandidatoForm(forms.Form):
+    """
+    Filtro del listado de candidatos (candidatos.html).
+
+    Antes el listado armaba el queryset directamente contra el modelo
+    (Candidato.objects.all(), sin validar ni tipar nada de lo que
+    llegara por GET). Este form es el que valida y limpia esos
+    parámetros de búsqueda antes de tocar la base (por SQL crudo).
+    """
+    q = forms.CharField(
+        label="Buscar",
+        required=False,
+        max_length=80,
+        widget=forms.TextInput(attrs={"placeholder": "Nombre, apellido o DNI"}),
+    )
+    tipo_deseado = forms.ChoiceField(
+        label="Tipo",
+        required=False,
+        choices=[('', 'Todos')] + TIPO_DESEADO_CHOICES,
+    )
+
+
+class LlamadaForm(forms.Form):
     fecha_hora = forms.DateTimeField(
+        label="Fecha y hora",
         widget=forms.DateTimeInput(attrs={'type': 'datetime-local'}, format='%Y-%m-%dT%H:%M'),
         input_formats=['%Y-%m-%dT%H:%M'],
     )
+    disposicion = forms.ChoiceField(label="Disposición", choices=DISPOSICION_CHOICES)
 
-    class Meta:
-        model = Llamada
-        fields = ['fecha_hora', 'disposicion']
 
-class EntrevistaForm(forms.ModelForm):
-    class Meta:
-        model = Entrevista
-        fields = ['fecha', 'materia_a_cubrir', 'valoracion']
-        widgets = {
-            'fecha': forms.DateInput(attrs={'type': 'date'}),
-        }
+class EntrevistaForm(forms.Form):
+    fecha = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
+    materia_a_cubrir = forms.ChoiceField(label="Materia a cubrir")
+    valoracion = forms.IntegerField(label="Valoración (1 a 5)", min_value=1, max_value=5)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["materia_a_cubrir"].choices = _choices_materias()
 
 class ProfesorForm(forms.Form): 
     dni = forms.CharField(max_length=10)
