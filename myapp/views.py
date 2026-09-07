@@ -12,7 +12,7 @@ from .mock_comite import (
 )
 from .forms import *
 
-from .models import Candidato
+from .models import Candidato #Corregir esto
 
 
 _id_comites = count(len(COMITES_MOCK) + 1)
@@ -26,7 +26,7 @@ def index(request):
 
 def candidatos(request):
     return render(request, "myapp/candidatos.html", {
-        "candidatos": Candidato.objects.all().order_by('apellidos', 'nombre'),
+        "candidatos": Candidato.objects.all().order_by('apellidos', 'nombre'),#Corregir esto
         "active_tab": "candidatos",
     })
 
@@ -53,7 +53,7 @@ def nuevo_candidato(request):
 
 
 def editar_candidato(request, pk):
-    candidato = get_object_or_404(Candidato, pk=pk)
+    candidato = get_object_or_404(Candidato, pk=pk) #corregir esto
 
     if request.method == "POST":
         form = CandidatoForm(request.POST, instance=candidato)
@@ -72,7 +72,7 @@ def editar_candidato(request, pk):
 
 
 def detalle_candidato(request, pk):
-    candidato = get_object_or_404(Candidato, pk=pk)
+    candidato = get_object_or_404(Candidato, pk=pk) #corregir esto
     form_llamada = LlamadaForm()
 
     if request.method == "POST" and request.POST.get("accion") == "llamada":
