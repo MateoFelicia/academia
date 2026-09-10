@@ -2,24 +2,6 @@ from django import forms
 from django.db import connection
 
 
-class ProfesorForm(forms.Form): 
-    dni = forms.CharField(max_length=10)
-    nombre = forms.CharField(max_length=100)
-    apellidos = forms.CharField(max_length=100)
-    domicilio = forms.CharField(max_length=150)
-    nivel_estudios = forms.ChoiceField(choices=[
-        ("inicial", "Inicial"),
-        ("primario", "Primario"),
-        ("secundario", "Secundario"),
-        ("Universitarios", "Universitario"),
-    ])
-    titulacion = forms.CharField(max_length=150)
-    tipo = forms.ChoiceField(choices=[
-        ("titular", "Titular"),
-        ("suplente", "Suplente"),
-        ("interino", "Interino"),
-    ])
-
 class BuscarDNIForm(forms.Form):
     dni = forms.CharField(label="DNI", max_length=15)
 
@@ -104,7 +86,7 @@ class CandidatoForm(forms.Form):
     )
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(CandidatoForm, self).__init__(*args, **kwargs)
         self.fields["materias"].choices = _choices_materias()
 
 
@@ -145,7 +127,7 @@ class EntrevistaForm(forms.Form):
     valoracion = forms.IntegerField(label="Valoración (1 a 5)", min_value=1, max_value=5)
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(EntrevistaForm, self).__init__(*args, **kwargs)
         self.fields["materia_a_cubrir"].choices = _choices_materias()
 
 class ProfesorForm(forms.Form): 
