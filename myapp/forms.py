@@ -125,3 +125,22 @@ class EntrevistaForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super(EntrevistaForm, self).__init__(*args, **kwargs)
         self.fields["materia_a_cubrir"].choices = _choices_materias()
+
+
+class ProfesorForm(forms.Form): 
+    dni = forms.CharField(max_length=10)
+    nombre = forms.CharField(max_length=100)
+    apellidos = forms.CharField(max_length=100)
+    domicilio = forms.CharField(max_length=150)
+    nivel_estudios = forms.ChoiceField(choices=[
+        ("inicial", "Inicial"),
+        ("primario", "Primario"),
+        ("secundario", "Secundario"),
+        ("Universitarios", "Universitario"),
+    ])
+    titulacion = forms.CharField(max_length=150)
+    tipo = forms.ChoiceField(choices=[
+        ("titular", "Titular"),
+        ("suplente", "Suplente"),
+        ("interino", "Interino"),
+    ])
