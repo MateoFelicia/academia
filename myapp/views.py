@@ -282,13 +282,21 @@ def nuevo_comite(request):
 
 
 def alumnos(request):
-    with connection.cursor() as cursor:
-        cursor.execute("SELECT dni, nombre, apellidos FROM alumno")
-        columnas = [col[0] for col in cursor.description]
-        alumnos = [dict(zip(columnas, fila)) for fila in cursor.fetchall()]
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT dni, nombre, apellidos, id_grupo FROM alumno")
+            columnas = [col[0] for col in cursor.description]
+            alumnos = [dict(zip(columnas, fila)) for fila in cursor.fetchall()]
+
+        return render(request, "myapp/alumnos.html", {
+            "alumnos": alumnos,
+            "active_tab": "alumnos",
+        })
+    except Exception as e:
+        messages.error(request, f"Error al cargar alumnos: {str(e)}")
 
     return render(request, "myapp/alumnos.html", {
-        "alumnos": alumnos,
+        "alumnos": [],
         "active_tab": "alumnos",
     })
 
@@ -302,7 +310,7 @@ def nuevo_alumno(request):
             with connection.cursor() as cursor:
                 cursor.execute(
                     """INSERT INTO alumno (dni, nombre, apellidos,id_grupo)
-                    VALUES (%s, %s, %s)""",
+                    VALUES (%s, %s, %s,%s)""",
                     [form.cleaned_data["dni"], form.cleaned_data["nombre"], form.cleaned_data["apellidos"], form.cleaned_data["id_grupo"]]
                 )
             guardado = True
@@ -319,18 +327,18 @@ def nuevo_alumno(request):
 
 def modificar_alumno(request):
     alumno = None
-    form_buscar = AlumnoForm(request.GET or None)
+    form_buscar = BuscarDNIForm(request.GET or None)
 
     try:
         if request.method == "POST" and "guardar" in request.POST:
             nuevo_DNI = request.POST.get("dni")
             nuevo_nombre = request.POST.get("nombre")
-            DNI_original = request.POST.get("dni")
+            DNI_original = request.POST.get("dni_original")
 
             if nuevo_DNI and nuevo_nombre and DNI_original:
                 with connection.cursor() as cursor:
                     cursor.execute(
-                        """UPDATE datos_personales
+                        """UPDATE alumno
                            SET dni = %s, nombre = %s
                            WHERE dni = %s""",
                         [nuevo_DNI, nuevo_nombre, DNI_original]
@@ -345,7 +353,7 @@ def modificar_alumno(request):
                 dni = form_buscar.cleaned_data["dni"]
                 with connection.cursor() as cursor:
                     cursor.execute(
-                        "SELECT dni, nombre FROM datos_personales WHERE dni = %s",
+                        "SELECT dni, nombre FROM alumno WHERE dni = %s",
                         [dni]
                     )
                     alumno = cursor.fetchone()
@@ -358,7 +366,8 @@ def modificar_alumno(request):
 
     contexto = {
         "form_buscar": form_buscar,
-        "alumno": {"dni": alumno[0], "nombre": alumno[1]} if alumno else None
+        "alumno": {"dni": alumno[0], "nombre": alumno[1]} if alumno else None,
+        "active_tab": "modificar_alumno",
     }
 
     return render(request, "myapp/modificar_alumno.html", contexto)
@@ -372,7 +381,7 @@ def eliminar_alumno(request):
             dni = request.POST.get("dni")
             if dni:
                 with connection.cursor() as cursor:
-                    cursor.execute("DELETE FROM datos_personales WHERE dni = %s", [dni])
+                    cursor.execute("DELETE FROM alumno WHERE dni = %s", [dni])
                 messages.success(request, "Alumno eliminado correctamente.")
                 return redirect('alumnos')
             else:
@@ -382,7 +391,7 @@ def eliminar_alumno(request):
             if form_buscar.is_valid():
                 dni = form_buscar.cleaned_data["dni"]
                 with connection.cursor() as cursor:
-                    cursor.execute("SELECT dni, nombre FROM datos_personales WHERE dni = %s", [dni])
+                    cursor.execute("SELECT dni, nombre FROM alumno WHERE dni = %s", [dni])
                     alumno = cursor.fetchone()
                 if not alumno:
                     messages.warning(request, "No se encontró ningún alumno con ese DNI.")
@@ -397,10 +406,14 @@ def eliminar_alumno(request):
     })
 
 def profesores(request):
-    with connection.cursor() as cursor:
-        cursor.execute("SELECT dni, nombre, apellidos,titulacion,tipo FROM profesor")
-        columnas = [col[0] for col in cursor.description]
-        profesores = [dict(zip(columnas, fila)) for fila in cursor.fetchall()]
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT dni, nombre, apellidos,titulacion,tipo FROM profesor")
+            columnas = [col[0] for col in cursor.description]
+            profesores = [dict(zip(columnas, fila)) for fila in cursor.fetchall()]
+    except Exception as e:
+        messages.error(request, f"Error al cargar profesores: {str(e)}")
+        profesores = []
 
     return render(request, "myapp/profesores.html", {
         "profesores": profesores,
@@ -430,18 +443,18 @@ def nuevo_profesor(request):
     return render(request, "myapp/nuevo_profesor.html", {
         "form": form,
         "guardado": guardado,
-        "active_tab": "profesores",
+        "active_tab": "nuevo_profesor",
     })
 
 def modificar_profesor(request):
     profesor = None
-    form_buscar = ProfesorForm(request.GET or None)
+    form_buscar = BuscarDNIForm(request.GET or None)
 
     try:
         if request.method == "POST" and "guardar" in request.POST:
             nuevo_DNI = request.POST.get("dni")
             nuevo_nombre = request.POST.get("nombre")
-            DNI_original = request.POST.get("dni")
+            DNI_original = request.POST.get("dni_original")
 
             if nuevo_DNI and nuevo_nombre and DNI_original:
                 with connection.cursor() as cursor:
@@ -452,7 +465,7 @@ def modificar_profesor(request):
                         [nuevo_DNI, nuevo_nombre, DNI_original]
                     )
                 messages.success(request, "Profesor actualizado correctamente.")
-                redirect('profesores')
+                return redirect('profesores')
             else:
                 messages.error(request, "Faltan campos obligatorios.")
 
@@ -461,7 +474,7 @@ def modificar_profesor(request):
                 dni = form_buscar.cleaned_data["dni"]
                 with connection.cursor() as cursor:
                     cursor.execute(
-                        "SELECT dni, nombre FROM datos_personales WHERE dni = %s",
+                        "SELECT dni, nombre FROM profesor WHERE dni = %s",
                         [dni]
                     )
                     profesor = cursor.fetchone()
@@ -474,7 +487,8 @@ def modificar_profesor(request):
 
     contexto = {
         "form_buscar": form_buscar,
-        "profesor": {"dni": profesor[0], "nombre": profesor[1]} if profesor else None
+        "profesor": {"dni": profesor[0], "nombre": profesor[1]} if profesor else None,
+        "active_tab": "modificar_profesor",
     }
 
     return render(request, "myapp/modificar_profesor.html", contexto)
@@ -488,7 +502,7 @@ def eliminar_profesor(request):
             dni = request.POST.get("dni")
             if dni:
                 with connection.cursor() as cursor:
-                    cursor.execute("DELETE FROM datos_personales WHERE dni = %s", [dni])
+                    cursor.execute("DELETE FROM profesor WHERE dni = %s", [dni])
                 messages.success(request, "Profesor eliminado correctamente.")
                 return redirect('profesores')
             else:
@@ -498,7 +512,7 @@ def eliminar_profesor(request):
             if form_buscar.is_valid():
                 dni = form_buscar.cleaned_data["dni"]
                 with connection.cursor() as cursor:
-                    cursor.execute("SELECT dni, nombre FROM datos_personales WHERE dni = %s", [dni])
+                    cursor.execute("SELECT dni, nombre FROM profesor WHERE dni = %s", [dni])
                     profesor = cursor.fetchone()
                 if not profesor:
                     messages.warning(request, "No se encontró ningún profesor con ese DNI.")

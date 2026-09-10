@@ -36,6 +36,7 @@
     <h2>Modificar: {{ profesor.dni }} — {{ profesor.nombre }}</h2>
     <form method="post">
         {% csrf_token %}
+        <input type="hidden" name="dni_original" value="{{ profesor.dni }}">
 
         <div class="campo-grupo">
             <label>Matrícula (DNI)</label>

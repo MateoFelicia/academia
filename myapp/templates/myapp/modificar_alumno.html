@@ -36,6 +36,7 @@
     <h2>Modificar: {{ alumno.dni }} — {{ alumno.nombre }}</h2>
     <form method="post">
         {% csrf_token %}
+        <input type="hidden" name="dni_original" value="{{ alumno.dni }}">
 
         <div class="campo-grupo">
             <label>Matrícula (DNI)</label>

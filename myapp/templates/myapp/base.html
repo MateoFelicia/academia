@@ -158,11 +158,11 @@
             <a href="{% url 'alumnos' %}" {% if active_tab == 'alumnos' %}class="active" {% endif %}>Alumnos</a>
             <a href="{% url 'nuevo_alumno' %}" {% if active_tab == 'nuevo_alumno' %}class="active" {% endif %}>Alumno nuevo</a>
             <a href="{% url 'modificar_alumno' %}" {% if active_tab == 'modificar_alumno' %}class="active" {% endif %}>Modificar Alumno</a>
-            <a href="{% url 'eliminar_alumno' %}">Eliminar Alumno</a>
+            <a href="{% url 'eliminar_alumno' %}"  {% if active_tab == 'eliminar_alumno' %}class="active" {% endif %}>Eliminar Alumno</a>
             <a href="{% url 'profesores' %}" {% if active_tab == 'profesores' %}class="active" {% endif %}>Profesores</a>
             <a href="{% url 'nuevo_profesor' %}" {% if active_tab == 'nuevo_profesor' %}class="active" {% endif %}>Profesor nuevo</a>
             <a href="{% url 'modificar_profesor' %}" {% if active_tab == 'modificar_profesor' %}class="active" {% endif %}>Modificar Profesor</a>
-            <a href="{% url 'eliminar_profesor' %}">Eliminar Profesor</a>
+            <a href="{% url 'eliminar_profesor' %}" {% if active_tab == 'eliminar_profesor' %}class="active" {% endif %}>Eliminar Profesor</a>
         </nav>
     </header>
     <main>

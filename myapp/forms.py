@@ -1,7 +1,6 @@
 from django import forms
 from django.db import connection
 
-
 class ProfesorForm(forms.Form): 
     dni = forms.CharField(max_length=10)
     nombre = forms.CharField(max_length=100)
@@ -11,20 +10,16 @@ class ProfesorForm(forms.Form):
         ("inicial", "Inicial"),
         ("primario", "Primario"),
         ("secundario", "Secundario"),
-        ("Universitarios", "Universitario"),
+        ("Universitario", "Universitario"),
     ])
     titulacion = forms.CharField(max_length=150)
     tipo = forms.ChoiceField(choices=[
-        ("titular", "Titular"),
-        ("suplente", "Suplente"),
-        ("interino", "Interino"),
+        ("tutor", "TUTOR"),
+        ("especialista", "ESPECIALISTA"),
     ])
 
 class BuscarDNIForm(forms.Form):
     dni = forms.CharField(label="DNI", max_length=15)
-
-from django import forms
-from django.db import connection
 
 TIPO_DESEADO_CHOICES = [
     ('tutor', 'Tutor'),
@@ -147,24 +142,3 @@ class EntrevistaForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["materia_a_cubrir"].choices = _choices_materias()
-
-class ProfesorForm(forms.Form): 
-    dni = forms.CharField(max_length=10)
-    nombre = forms.CharField(max_length=100)
-    apellidos = forms.CharField(max_length=100)
-    domicilio = forms.CharField(max_length=150)
-    nivel_estudios = forms.ChoiceField(choices=[
-        ("inicial", "Inicial"),
-        ("primario", "Primario"),
-        ("secundario", "Secundario"),
-        ("Universitarios", "Universitario"),
-    ])
-    titulacion = forms.CharField(max_length=150)
-    tipo = forms.ChoiceField(choices=[
-        ("titular", "Titular"),
-        ("suplente", "Suplente"),
-        ("interino", "Interino"),
-    ])
-
-class BuscarDNIForm(forms.Form):
-    dni = forms.CharField(label="DNI", max_length=15)

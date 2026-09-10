@@ -32,7 +32,7 @@
     {% if alumno %}
     <hr>
     <h2>Eliminar: {{ alumno.dni }} — {{ alumno.nombre }}</h2>
-    <form method="post" onsubmit="return confirm('¿Seguro que querés eliminar a {{ alumno.nombre }}? No se puede deshacer.');">
+    <form method="post" onsubmit="return confirm('¿Seguro que querés eliminar a { alumno.nombre }? No se puede deshacer.');">
         {% csrf_token %}
         <input type="hidden" name="dni" value="{{ alumno.dni }}">
         <button type="submit" name="eliminar">Eliminar Alumno</button>
