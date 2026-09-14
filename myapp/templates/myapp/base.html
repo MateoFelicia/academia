@@ -87,6 +87,22 @@
             color: var(--bg-text);
         }
 
+        .sesion-info {
+            font-size: 0.78rem;
+            color: var(--bg-text-soft);
+            margin: 0.7rem 0 0;
+        }
+
+        .sesion-salir {
+            color: var(--bg-text);
+            text-decoration: none;
+            border-bottom: 1px solid rgba(237, 231, 214, 0.4);
+        }
+
+        .sesion-salir:hover {
+            border-bottom-color: var(--bg-text);
+        }
+
         main {
             padding: 0.4rem 2rem 3rem;
         }
@@ -163,7 +179,16 @@
             <a href="{% url 'nuevo_profesor' %}" {% if active_tab == 'nuevo_profesor' %}class="active" {% endif %}>Profesor nuevo</a>
             <a href="{% url 'modificar_profesor' %}" {% if active_tab == 'modificar_profesor' %}class="active" {% endif %}>Modificar Profesor</a>
             <a href="{% url 'eliminar_profesor' %}" {% if active_tab == 'eliminar_profesor' %}class="active" {% endif %}>Eliminar Profesor</a>
+            {% if request.session.usuario_dni %}
+                <a href="{% url 'nuevo_usuario' %}" {% if active_tab == 'nuevo_usuario' %}class="active" {% endif %}>Crear usuario</a>
+            {% endif %}
         </nav>
+        {% if request.session.usuario_nombre %}
+            <p class="sesion-info">
+                Sesión: {{ request.session.usuario_nombre }}
+                (<a href="{% url 'logout' %}" class="sesion-salir">Salir</a>)
+            </p>
+        {% endif %}
     </header>
     <main>
         {% block content %}{% endblock %}

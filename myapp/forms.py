@@ -4,6 +4,15 @@ from django.db import connection
 class BuscarDNIForm(forms.Form):
     dni = forms.CharField(label="DNI", max_length=15)
 
+class LoginForm(forms.Form):
+    dni = forms.CharField(label="DNI", max_length=20, widget=forms.TextInput(attrs={
+        "placeholder": "DNI de usuario",
+        "autofocus": True,
+    }))
+    password = forms.CharField(label="Contraseña", widget=forms.PasswordInput(attrs={
+        "placeholder": "Contraseña",
+    }))
+
 TIPO_DESEADO_CHOICES = [
     ('tutor', 'Tutor'),
     ('especialista', 'Especialista'),

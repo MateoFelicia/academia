@@ -1,0 +1,115 @@
+{% extends "myapp/base.html" %}
+
+{% block title %}Crear usuario{% endblock %}
+{% block heading %}Archivo académico{% endblock %}
+{% block subtitle %}Alta de un nuevo usuario de acceso al sistema{% endblock %}
+
+{% block extra_style %}
+<style>
+.login-caja {
+    background: var(--paper);
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 2.2rem 2rem;
+    margin: 1.5rem auto 0;
+    max-width: 400px;
+    animation: aparecer 0.45s ease both;
+}
+
+.login-caja h2 {
+    font-family: Georgia, 'Iowan Old Style', serif;
+    font-size: 1.4rem;
+    color: var(--ink);
+    margin: 0 0 1.4rem;
+    text-align: center;
+}
+
+.campo-grupo {
+    margin-bottom: 1.1rem;
+}
+
+.campo-grupo label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    margin-bottom: 0.35rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.campo-grupo input {
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius);
+    font-size: 1rem;
+    color: var(--ink);
+    background: #fff;
+}
+
+.login-caja button {
+    width: 100%;
+    margin-top: 0.6rem;
+    padding: 0.7rem;
+    border: none;
+    border-radius: var(--radius);
+    background: var(--azul);
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.login-caja button:hover {
+    background: #24506f;
+}
+
+.login-enlace {
+    display: block;
+    text-align: center;
+    margin-top: 1.2rem;
+    font-size: 0.85rem;
+    color: var(--azul);
+    text-decoration: none;
+}
+
+.login-enlace:hover {
+    text-decoration: underline;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+{% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<div class="login-caja">
+    <h2>Crear usuario</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div class="campo-grupo">
+            <label>DNI</label>
+            <input type="text" name="dni" placeholder="DNI de usuario" required autofocus>
+        </div>
+        <div class="campo-grupo">
+            <label>Nombre completo</label>
+            <input type="text" name="nombre" placeholder="Nombre y apellido" required>
+        </div>
+        <div class="campo-grupo">
+            <label>Contraseña</label>
+            <input type="password" name="password" placeholder="Contraseña" required>
+        </div>
+        <button type="submit">Crear usuario</button>
+    </form>
+    <a class="login-enlace" href="{% url 'login' %}">Ya tengo usuario, volver</a>
+</div>
+{% endblock %}
