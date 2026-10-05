@@ -1,5 +1,6 @@
 from django.db import connection
 from django.contrib import messages
+from django.contrib.auth.hashers import check_password, make_password
 from django.http import Http404
 from itertools import count
 from django.shortcuts import render, redirect
@@ -27,6 +28,85 @@ from .mock_candidatos import (
 from .forms import *
 
 
+def requerir_login(vista):
+    def envoltura(request, *args, **kwargs):
+        if not request.session.get("usuario_dni"):
+            messages.warning(request, "Tenés que iniciar sesión para entrar a la administración.")
+            return redirect("login")
+        return vista(request, *args, **kwargs)
+    return envoltura
+
+
+def login_view(request):
+    if request.method == "POST":
+        form = LoginForm(request.POST)
+
+        if form.is_valid():
+            dni = form.cleaned_data["dni"]
+            password = form.cleaned_data["password"]
+
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "SELECT dni, nombre, password FROM usuario WHERE dni = %s",
+                    [dni]
+                )
+                usuario = cursor.fetchone()
+
+            if usuario and check_password(password, usuario[2]):
+                request.session["usuario_dni"] = usuario[0]
+                request.session["usuario_nombre"] = usuario[1]
+                messages.success(request, f"Bienvenido, {usuario[1]}.")
+                return redirect("index")
+            else:
+                messages.error(request, "DNI o contraseña incorrectos.")
+    else:
+        form = LoginForm()
+
+    return render(request, "myapp/login.html", {
+        "form": form,
+    })
+
+
+def logout_view(request):
+    if "usuario_dni" in request.session:
+        del request.session["usuario_dni"]
+        del request.session["usuario_nombre"]
+    messages.success(request, "Sesión cerrada correctamente.")
+    return redirect("login")
+
+
+@requerir_login
+def nuevo_usuario(request):
+    if request.method == "POST":
+        form = LoginForm(request.POST)
+
+        if form.is_valid():
+            dni = form.cleaned_data["dni"]
+            nombre = request.POST.get("nombre", "").strip()
+            password = form.cleaned_data["password"]
+
+            if not nombre:
+                messages.error(request, "Falta el nombre del usuario.")
+            else:
+                with connection.cursor() as cursor:
+                    try:
+                        cursor.execute(
+                            """INSERT INTO usuario (dni, nombre, password)
+                            VALUES (%s, %s, %s)""",
+                            [dni, nombre, make_password(password)]
+                        )
+                        messages.success(request, f"Usuario {dni} creado correctamente.")
+                        return redirect("index")
+                    except Exception as e:
+                        messages.error(request, f"No se pudo crear el usuario: {str(e)}")
+    else:
+        form = LoginForm()
+
+    return render(request, "myapp/nuevo_usuario.html", {
+        "form": form,
+    })
+
+
 _id_comites = count(len(COMITES_MOCK) + 1)
 _id_candidatos = count(len(CANDIDATOS_MOCK) + 1)
 _id_llamadas = count(len(LLAMADAS_MOCK) + 1)
@@ -39,6 +119,7 @@ def index(request):
     })
 
 
+@requerir_login
 def candidatos(request):
     form = BuscarCandidatoForm(request.GET or None)
     lista = listar_candidatos_mock()
@@ -65,6 +146,7 @@ def candidatos(request):
     })
 
 
+@requerir_login
 def nuevo_candidato(request):
     guardado = False
 
@@ -95,6 +177,7 @@ def nuevo_candidato(request):
     })
 
 
+@requerir_login
 def editar_candidato(request, pk):
     candidato = obtener_candidato_mock(pk)
     if not candidato:
@@ -128,6 +211,7 @@ def editar_candidato(request, pk):
     })
 
 
+@requerir_login
 def detalle_candidato(request, pk):
     candidato = obtener_candidato_mock(pk)
     if not candidato:
@@ -217,6 +301,7 @@ def detalle_candidato(request, pk):
     })
 
 
+@requerir_login
 def comite(request):
     """
     Lista los comités existentes y permite agregar uno nuevo
@@ -269,6 +354,7 @@ def comite(request):
     })
 
 
+@requerir_login
 def nuevo_comite(request):
     """
     Esta vista ya no es necesaria para el funcionamiento del alta,
@@ -281,6 +367,7 @@ def nuevo_comite(request):
 
 
 
+@requerir_login
 def alumnos(request):
     try:
         with connection.cursor() as cursor:
@@ -300,6 +387,7 @@ def alumnos(request):
         "active_tab": "alumnos",
     })
 
+@requerir_login
 def nuevo_alumno(request):
     guardado = False
 
@@ -325,6 +413,7 @@ def nuevo_alumno(request):
         "active_tab": "alumnos",
     })
 
+@requerir_login
 def modificar_alumno(request):
     alumno = None
     form_buscar = BuscarDNIForm(request.GET or None)
@@ -372,6 +461,7 @@ def modificar_alumno(request):
 
     return render(request, "myapp/modificar_alumno.html", contexto)
 
+@requerir_login
 def eliminar_alumno(request):
     alumno = None
     form_buscar = BuscarDNIForm(request.GET or None)
@@ -405,6 +495,7 @@ def eliminar_alumno(request):
         "active_tab": "alumnos",
     })
 
+@requerir_login
 def profesores(request):
     try:
         with connection.cursor() as cursor:
@@ -421,6 +512,7 @@ def profesores(request):
     })
 
 
+@requerir_login
 def nuevo_profesor(request):
     guardado = False
 
@@ -446,6 +538,7 @@ def nuevo_profesor(request):
         "active_tab": "nuevo_profesor",
     })
 
+@requerir_login
 def modificar_profesor(request):
     profesor = None
     form_buscar = BuscarDNIForm(request.GET or None)
@@ -493,6 +586,7 @@ def modificar_profesor(request):
 
     return render(request, "myapp/modificar_profesor.html", contexto)
 
+@requerir_login
 def eliminar_profesor(request):
     profesor = None
     form_buscar = BuscarDNIForm(request.GET or None)

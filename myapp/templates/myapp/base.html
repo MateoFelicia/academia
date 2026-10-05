@@ -32,7 +32,16 @@
             <a href="{% url 'nuevo_profesor' %}" {% if active_tab == 'nuevo_profesor' %}class="active" {% endif %}>Profesor nuevo</a>
             <a href="{% url 'modificar_profesor' %}" {% if active_tab == 'modificar_profesor' %}class="active" {% endif %}>Modificar Profesor</a>
             <a href="{% url 'eliminar_profesor' %}" {% if active_tab == 'eliminar_profesor' %}class="active" {% endif %}>Eliminar Profesor</a>
+            {% if request.session.usuario_dni %}
+                <a href="{% url 'nuevo_usuario' %}" {% if active_tab == 'nuevo_usuario' %}class="active" {% endif %}>Crear usuario</a>
+            {% endif %}
         </nav>
+        {% if request.session.usuario_nombre %}
+            <p class="sesion-info">
+                Sesión: {{ request.session.usuario_nombre }}
+                (<a href="{% url 'logout' %}" class="sesion-salir">Salir</a>)
+            </p>
+        {% endif %}
     </header>
     <main>
         {% block content %}{% endblock %}
