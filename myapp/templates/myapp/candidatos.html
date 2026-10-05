@@ -8,7 +8,8 @@ reales{% endblock %}
 {% load static %}
 
 {% block extra_style %}
-<link rel="stylesheet" href="{% static 'myapp/candidato.css' %}">
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'myapp/css/candidato.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -31,8 +32,8 @@ reales{% endblock %}
             <dt>Legajo</dt>
             <dd>#{{ c.id }}</dd>
         </dl>
-        <a class="editar-link" href="{% url 'detalle_candidato' c.id %}">Ver ficha →</a>
-        <a class="editar-link" href="{% url 'editar_candidato' c.id %}">Editar →</a>
+        <a class="button-link" href="{% url 'detalle_candidato' c.id %}">Ver ficha →</a>
+        <a class="button-link" href="{% url 'editar_candidato' c.id %}">Editar →</a>
     </article>
     {% endfor %}
 </div>
