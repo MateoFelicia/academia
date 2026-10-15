@@ -1,36 +1,91 @@
-from django.db import connection
+from django.db import IntegrityError, connection
 from django.contrib import messages
 from django.http import Http404
-from itertools import count
 from django.shortcuts import render, redirect
-
-from .mock_comite import (
-    ComiteMock,
-    COMITES_MOCK,
-    comite_detallado_mock,
-    listar_comites_mock,
-    listar_profesores_mock,
-)
-from .mock_candidatos import (
-    CandidatoMock,
-    LlamadaMock,
-    EntrevistaMock,
-    CANDIDATOS_MOCK,
-    LLAMADAS_MOCK,
-    ENTREVISTAS_MOCK,
-    listar_candidatos_mock,
-    obtener_candidato_mock,
-    obtener_materia_mock,
-    obtener_llamada_mock,
-    entrevista_de_llamada_mock,
-)
+from django.contrib.auth.hashers import check_password, make_password
 from .forms import *
 
+from . import datos_candidatos as datos
+from . import datos_comite as comites
+from .datos_candidatos import SinComiteError
 
-_id_comites = count(len(COMITES_MOCK) + 1)
-_id_candidatos = count(len(CANDIDATOS_MOCK) + 1)
-_id_llamadas = count(len(LLAMADAS_MOCK) + 1)
-_id_entrevistas = count(len(ENTREVISTAS_MOCK) + 1)
+def requerir_login(vista):
+    def envoltura(request, *args, **kwargs):
+        if request.session.get('nivel') != 'ADMIN':
+            messages.warning(request, "No autorizado.")
+            return redirect("login")
+        return vista(request, *args, **kwargs)
+    return envoltura
+
+
+def login_view(request):
+    if request.method == "POST":
+        form = LoginForm(request.POST)
+
+        if form.is_valid():
+            dni = form.cleaned_data["dni"]
+            password = form.cleaned_data["password"]
+
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "SELECT dni, nombre, password FROM usuario WHERE dni = %s",
+                    [dni]
+                )
+                usuario = cursor.fetchone()
+
+            if usuario and check_password(password, usuario[2]):
+                request.session["usuario_dni"] = usuario[0]
+                request.session["usuario_nombre"] = usuario[1]
+                messages.success(request, f"Bienvenido, {usuario[1]}.")
+                return redirect("index")
+            else:
+                messages.error(request, "DNI o contraseña incorrectos.")
+    else:
+        form = LoginForm()
+
+    return render(request, "myapp/login.html", {
+        "form": form,
+    })
+
+
+def logout_view(request):
+    if "usuario_dni" in request.session:
+        del request.session["usuario_dni"]
+        del request.session["usuario_nombre"]
+    messages.success(request, "Sesión cerrada correctamente.")
+    return redirect("login")
+
+
+@requerir_login
+def nuevo_usuario(request):
+    if request.method == "POST":
+        form = LoginForm(request.POST)
+
+        if form.is_valid():
+            dni = form.cleaned_data["dni"]
+            nombre = request.POST.get("nombre", "").strip()
+            password = form.cleaned_data["password"]
+
+            if not nombre:
+                messages.error(request, "Falta el nombre del usuario.")
+            else:
+                with connection.cursor() as cursor:
+                    try:
+                        cursor.execute(
+                            """INSERT INTO usuario (dni, nombre, password)
+                            VALUES (%s, %s, %s)""",
+                            [dni, nombre, make_password(password)]
+                        )
+                        messages.success(request, f"Usuario {dni} creado correctamente.")
+                        return redirect("index")
+                    except Exception as e:
+                        messages.error(request, f"No se pudo crear el usuario: {str(e)}")
+    else:
+        form = LoginForm()
+
+    return render(request, "myapp/nuevo_usuario.html", {
+        "form": form,
+    })
 
 
 def index(request):
@@ -41,25 +96,14 @@ def index(request):
 
 def candidatos(request):
     form = BuscarCandidatoForm(request.GET or None)
-    lista = listar_candidatos_mock()
+    q = tipo_deseado = ""
 
     if form.is_valid():
-        q = form.cleaned_data.get("q")
-        tipo_deseado = form.cleaned_data.get("tipo_deseado")
-
-        if q:
-            q = q.lower()
-            lista = [
-                c for c in lista
-                if q in c.nombre.lower() or q in c.apellidos.lower() or q in c.dni.lower()
-            ]
-        if tipo_deseado:
-            lista = [c for c in lista if c.tipo_deseado == tipo_deseado]
-
-    lista = sorted(lista, key=lambda c: (c.apellidos, c.nombre))
+        q = form.cleaned_data.get("q") or ""
+        tipo_deseado = form.cleaned_data.get("tipo_deseado") or ""
 
     return render(request, "myapp/candidatos.html", {
-        "candidatos": lista,
+        "candidatos": datos.listar_candidatos(q, tipo_deseado),
         "form_buscar": form,
         "active_tab": "candidatos",
     })
@@ -72,16 +116,7 @@ def nuevo_candidato(request):
         form = CandidatoForm(request.POST)
 
         if form.is_valid():
-            nuevo = CandidatoMock(
-                id=next(_id_candidatos),
-                dni=form.cleaned_data["dni"],
-                nombre=form.cleaned_data["nombre"],
-                apellidos=form.cleaned_data["apellidos"],
-                curriculum=form.cleaned_data["curriculum"],
-                tipo_deseado=form.cleaned_data["tipo_deseado"],
-                materias=[int(m) for m in form.cleaned_data["materias"]],
-            )
-            CANDIDATOS_MOCK.append(nuevo)
+            datos.crear_candidato(**form.cleaned_data)
             guardado = True
             form = CandidatoForm()
 
@@ -96,19 +131,14 @@ def nuevo_candidato(request):
 
 
 def editar_candidato(request, pk):
-    candidato = obtener_candidato_mock(pk)
+    candidato = datos.obtener_candidato(pk)
     if not candidato:
         raise Http404("Candidato no encontrado")
 
     if request.method == "POST":
         form = CandidatoForm(request.POST)
         if form.is_valid():
-            candidato.dni = form.cleaned_data["dni"]
-            candidato.nombre = form.cleaned_data["nombre"]
-            candidato.apellidos = form.cleaned_data["apellidos"]
-            candidato.curriculum = form.cleaned_data["curriculum"]
-            candidato.tipo_deseado = form.cleaned_data["tipo_deseado"]
-            candidato.materias = [int(m) for m in form.cleaned_data["materias"]]
+            datos.actualizar_candidato(pk, **form.cleaned_data)
             messages.success(request, "Candidato actualizado correctamente.")
             return redirect('candidatos')
     else:
@@ -129,7 +159,7 @@ def editar_candidato(request, pk):
 
 
 def detalle_candidato(request, pk):
-    candidato = obtener_candidato_mock(pk)
+    candidato = datos.obtener_candidato(pk)
     if not candidato:
         raise Http404("Candidato no encontrado")
 
@@ -138,18 +168,16 @@ def detalle_candidato(request, pk):
     if request.method == "POST" and request.POST.get("accion") == "llamada":
         form_llamada = LlamadaForm(request.POST)
         if form_llamada.is_valid():
-            nueva_llamada = LlamadaMock(
-                id=next(_id_llamadas),
-                candidato_id=candidato.id,
-                fecha_hora=form_llamada.cleaned_data["fecha_hora"],
-                disposicion=form_llamada.cleaned_data["disposicion"],
+            datos.registrar_llamada(
+                candidato.id,
+                form_llamada.cleaned_data["fecha_hora"],
+                form_llamada.cleaned_data["disposicion"],
             )
-            LLAMADAS_MOCK.append(nueva_llamada)
             messages.success(request, "Llamada registrada correctamente.")
             return redirect('detalle_candidato', pk=pk)
 
     elif request.method == "POST" and request.POST.get("accion") == "entrevista":
-        llamada = obtener_llamada_mock(request.POST.get("llamada_id"), candidato.id)
+        llamada = datos.obtener_llamada(request.POST.get("llamada_id"), candidato.id)
         if not llamada:
             raise Http404("Llamada no encontrada")
 
@@ -162,52 +190,54 @@ def detalle_candidato(request, pk):
                 request,
                 "Solo se puede cargar una entrevista si la llamada fue 'Entrevista concertada'."
             )
-        elif entrevista_de_llamada_mock(llamada.id) is not None:
-            # Equivalente al UNIQUE que tenía la columna llamada_id en la base.
+        elif datos.entrevista_de_llamada(llamada.id) is not None:
+            # La columna id_llamada de entrevista NO tiene UNIQUE en la base,
+            # así que esta regla la tiene que cumplir la aplicación.
             messages.error(request, "Esa llamada ya tiene una entrevista cargada.")
         elif form_entrevista.is_valid():
-            nueva_entrevista = EntrevistaMock(
-                id=next(_id_entrevistas),
-                llamada_id=llamada.id,
-                fecha=form_entrevista.cleaned_data["fecha"],
-                materia_a_cubrir_id=int(form_entrevista.cleaned_data["materia_a_cubrir"]),
-                valoracion=form_entrevista.cleaned_data["valoracion"],
-            )
-            ENTREVISTAS_MOCK.append(nueva_entrevista)
-            messages.success(request, "Entrevista registrada correctamente.")
+            try:
+                datos.registrar_entrevista(
+                    candidato.id,
+                    llamada.id,
+                    form_entrevista.cleaned_data["fecha"],
+                    int(form_entrevista.cleaned_data["materia_a_cubrir"]),
+                    form_entrevista.cleaned_data["valoracion"],
+                )
+            except SinComiteError as error:
+                messages.error(request, str(error))
+            else:
+                messages.success(request, "Entrevista registrada correctamente.")
         else:
             messages.error(request, "No se pudo guardar la entrevista: revisá los datos.")
         return redirect('detalle_candidato', pk=pk)
 
     disposicion_labels = dict(DISPOSICION_CHOICES)
-    llamadas_candidato = sorted(
-        (l for l in LLAMADAS_MOCK if l.candidato_id == candidato.id),
-        key=lambda l: l.fecha_hora,
-        reverse=True,
-    )
 
+    # El template dibuja el color del sello comparando la disposición en
+    # minúsculas ('concertada', 'no_interesado'), así que lo que se le pasa
+    # es el valor del formulario, no el ENUM de la base.
     llamadas = []
-    for l in llamadas_candidato:
-        entrevista = entrevista_de_llamada_mock(l.id)
-        llamada = {
-            "id": l.id,
-            "pk": l.id,
-            "fecha_hora": l.fecha_hora,
-            "disposicion": l.disposicion,
-            "disposicion_display": disposicion_labels.get(l.disposicion, l.disposicion),
-            "get_disposicion_display": disposicion_labels.get(l.disposicion, l.disposicion),
+    for llamada in datos.listar_llamadas(candidato.id):
+        entrevista = datos.entrevista_de_llamada(llamada.id)
+        item = {
+            "pk": llamada.id,
+            "fecha_hora": llamada.fecha_hora,
+            "disposicion": llamada.disposicion,
+            "get_disposicion_display": disposicion_labels.get(
+                llamada.disposicion, llamada.disposicion
+            ),
         }
         if entrevista is not None:
-            materia = obtener_materia_mock(entrevista.materia_a_cubrir_id)
-            llamada["entrevista"] = {
+            item["entrevista"] = {
                 "fecha": entrevista.fecha,
-                "materia_a_cubrir": materia.nombre if materia else entrevista.materia_a_cubrir_id,
+                "materia_a_cubrir": entrevista.asignatura_nombre,
                 "valoracion": entrevista.valoracion,
             }
-        elif l.disposicion == "concertada":
-            # Equivalente a la property puede_cargar_entrevista de antes.
-            llamada["form_entrevista"] = EntrevistaForm()
-        llamadas.append(llamada)
+        elif llamada.disposicion == "concertada":
+            # Solo una llamada concertada y sin entrevista habilita el
+            # formulario de carga.
+            item["form_entrevista"] = EntrevistaForm()
+        llamadas.append(item)
 
     return render(request, "myapp/detalle_candidato.html", {
         "candidato": candidato,
@@ -228,43 +258,37 @@ def comite(request):
         form = ComiteForm(request.POST)
 
         if form.is_valid():
-            nuevo = ComiteMock(
-                id=next(_id_comites),
-                anio=form.cleaned_data["anio"],
-                id_presidente=int(form.cleaned_data["id_presidente"]),
-                id_secretario=int(form.cleaned_data["id_secretario"]),
-                id_vocal=int(form.cleaned_data["id_vocal"]),
-            )
-
-            COMITES_MOCK.append(nuevo)
-
-            guardado = True
-
-            # Limpiamos el formulario después de guardar.
-            form = ComiteForm()
+            try:
+                comites.crear_comite(
+                    form.cleaned_data["anio"],
+                    int(form.cleaned_data["id_presidente"]),
+                    int(form.cleaned_data["id_secretario"]),
+                    int(form.cleaned_data["id_vocal"]),
+                )
+            except IntegrityError:
+                # comite.anio es UNIQUE: solo puede haber un acta por año.
+                # Es el único IntegrityError alcanzable acá: los tres ids de
+                # profesor ya los validó el ChoiceField contra la base.
+                #
+                # Va como error del form y no como messages.error porque
+                # comite.html no imprime el bloque de messages (base.html
+                # tampoco lo trae): solo pinta non_field_errors.
+                form.add_error(None, "Ya existe un comité cargado para ese año.")
+            else:
+                guardado = True
+                # Limpiamos el formulario después de guardar.
+                form = ComiteForm()
 
     else:
         form = ComiteForm()
 
-    # Ordenamos los comités del más reciente al más antiguo.
-    comites_ordenados = sorted(
-        listar_comites_mock(),
-        key=lambda c: c.anio,
-        reverse=True,
-    )
-
-    # Convertimos cada comité en su versión detallada,
-    # resolviendo presidente, secretario y vocal a sus profesores.
-    comites = [
-        comite_detallado_mock(c)
-        for c in comites_ordenados
-    ]
-
     return render(request, "myapp/comite.html", {
         "form": form,
         "guardado": guardado,
-        "comites": comites,
-        "profesores": listar_profesores_mock(),
+        # listar_comites() ya viene ordenado del más reciente al más
+        # antiguo y con los tres roles resueltos a su profesor.
+        "comites": comites.listar_comites(),
+        "profesores": comites.listar_profesores(),
         "active_tab": "comite",
     })
 
@@ -407,16 +431,13 @@ def eliminar_alumno(request):
 
 def profesores(request):
     try:
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT dni, nombre, apellidos,titulacion,tipo FROM profesor")
-            columnas = [col[0] for col in cursor.description]
-            profesores = [dict(zip(columnas, fila)) for fila in cursor.fetchall()]
+        lista = comites.listar_profesores()
     except Exception as e:
         messages.error(request, f"Error al cargar profesores: {str(e)}")
-        profesores = []
+        lista = []
 
     return render(request, "myapp/profesores.html", {
-        "profesores": profesores,
+        "profesores": lista,
         "active_tab": "profesores",
     })
 

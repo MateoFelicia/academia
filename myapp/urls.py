@@ -19,4 +19,7 @@ urlpatterns = [
     path("profesores/nuevo/", views.nuevo_profesor, name="nuevo_profesor"),
     path("profesores/modificar/", views.modificar_profesor, name="modificar_profesor"),
     path("profesores/eliminar/", views.eliminar_profesor, name="eliminar_profesor"),
+    path("login/", views.login_view, name="login"),
+    path("logout/", views.logout_view, name="logout"),
+    path("usuario/nuevo/", views.nuevo_usuario, name="nuevo_usuario")
 ]

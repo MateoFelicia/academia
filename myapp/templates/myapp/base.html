@@ -21,6 +21,7 @@
         <p class="subtitle">{% block subtitle %}{% endblock %}</p>
         <nav class="tabs">
             <a href="{% url 'index' %}" {% if active_tab == 'index' %}class="active" {% endif %}>Portada</a>
+            <a href="{% url 'login' %}" {% if active_tab == 'login' %}class="active" {% endif %}>Iniciar sesion</a>
             <a href="{% url 'candidatos' %}" {% if active_tab == 'candidatos' %}class="active" {% endif %}>Candidatos</a>
             <a href="{% url 'nuevo_candidato' %}" {% if active_tab == 'candidatos' %}class="active" {% endif %}>Candidato nuevo</a>
             <a href="{% url 'comite' %}" {% if active_tab == 'comite' %}class="active" {% endif %}>Comités</a>
@@ -33,16 +34,16 @@
             <a href="{% url 'modificar_profesor' %}" {% if active_tab == 'modificar_profesor' %}class="active" {% endif %}>Modificar Profesor</a>
             <a href="{% url 'eliminar_profesor' %}" {% if active_tab == 'eliminar_profesor' %}class="active" {% endif %}>Eliminar Profesor</a>
         </nav>
+        {% if request.session.usuario_nombre %}
+            <p class="sesion-info">
+                Sesión: {{ request.session.usuario_nombre }}
+                (<a href="{% url 'logout' %}" class="sesion-salir">Salir</a>)
+            </p>
+        {% endif %}
     </header>
     <main>
         {% block content %}{% endblock %}
     </main>
-
-    <footer class="site">
-        {% block footer %}
-            Datos ficticios generados para prototipar la interfaz.
-        {% endblock %}
-    </footer>
 
 </body>
 

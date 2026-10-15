@@ -1,9 +1,11 @@
 from django import forms
-from django.db import connection
 
 class BuscarDNIForm(forms.Form):
     dni = forms.CharField(label="DNI", max_length=15)
 
+# Estas opciones están en minúsculas y son el vocabulario de los
+# formularios y los templates. La traducción al ENUM de MySQL (que las
+# guarda en mayúsculas) es una responsabilidad de datos_candidatos.py.
 TIPO_DESEADO_CHOICES = [
     ('tutor', 'Tutor'),
     ('especialista', 'Especialista'),
@@ -16,11 +18,24 @@ DISPOSICION_CHOICES = [
     ('concertada', 'Entrevista concertada'),
 ]
 
+class LoginForm(forms.Form):
+    dni = forms.CharField(label="DNI", max_length=20, widget=forms.TextInput(attrs={
+        "placeholder": "DNI de usuario",
+        "autofocus": True,
+    }))
+    password = forms.CharField(label="Contraseña", widget=forms.PasswordInput(attrs={
+        "placeholder": "Contraseña",
+    }))
 
 def _choices_materias():
-    with connection.cursor() as cursor:
-        cursor.execute("SELECT id, nombre FROM myapp_materia ORDER BY nombre")
-        return [(str(id_), nombre) for id_, nombre in cursor.fetchall()]
+    """Materias que se pueden cubrir en una entrevista.
+
+    La tabla se llama `asignatura`, no `materia`: es el mismo concepto con
+    el nombre que le daba el diseño de la base.
+    """
+    from .datos_candidatos import listar_materias
+
+    return [(str(a.id), a.nombre) for a in listar_materias()]
 
 
 class AlumnoForm(forms.Form):
@@ -34,7 +49,7 @@ class ComiteForm(forms.Form):
     """
     Alta de un comité evaluador (acta anual).
 
-    Los tres roles se resuelven contra PROFESORES_MOCK, así que en vez de
+    Los tres roles se resuelven contra la tabla `profesor`, así que en vez de
     pedir el id "a ciegas" (como AlumnoForm con id_grupo) usamos un
     ChoiceField dinámico: el usuario elige por nombre, el form guarda el id.
     """
@@ -45,11 +60,11 @@ class ComiteForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        from .mock_comite import listar_profesores_mock
+        from .datos_comite import listar_profesores
 
         opciones = [
             (str(p.id), f"{p.nombre_completo} — {p.titulacion}")
-            for p in listar_profesores_mock()
+            for p in listar_profesores()
         ]
         self.fields["id_presidente"] = forms.ChoiceField(label="Presidente", choices=opciones)
         self.fields["id_secretario"] = forms.ChoiceField(label="Secretario", choices=opciones)
@@ -72,8 +87,7 @@ class CandidatoForm(forms.Form):
     curriculum = forms.CharField(label="Currículum", max_length=255, required=False)
     tipo_deseado = forms.ChoiceField(
         label="Tipo deseado",
-        required=False,
-        choices=[('', '—')] + TIPO_DESEADO_CHOICES,
+        choices=TIPO_DESEADO_CHOICES,
     )
     materias = forms.MultipleChoiceField(
         label="Materias",
@@ -84,6 +98,8 @@ class CandidatoForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super(CandidatoForm, self).__init__(*args, **kwargs)
         self.fields["materias"].choices = _choices_materias()
+
+
 
 
 class BuscarCandidatoForm(forms.Form):
@@ -139,8 +155,10 @@ class ProfesorForm(forms.Form):
         ("Universitarios", "Universitario"),
     ])
     titulacion = forms.CharField(max_length=150)
+    # Estas son las opciones del ENUM `tipo` de la tabla profesor. Antes
+    # había acá titular/suplente/interino, que la base no acepta.
     tipo = forms.ChoiceField(choices=[
-        ("titular", "Titular"),
-        ("suplente", "Suplente"),
-        ("interino", "Interino"),
+        ("TUTOR", "Tutor"),
+        ("ESPECIALISTA", "Especialista"),
+        ("AMBOS", "Ambos"),
     ])
