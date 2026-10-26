@@ -4,18 +4,26 @@ from django.http import Http404
 from django.shortcuts import render, redirect
 from django.contrib.auth.hashers import check_password, make_password
 from .forms import *
+from functools import wraps
 
 from . import datos_candidatos as datos
 from . import datos_comite as comites
 from .datos_candidatos import SinComiteError
 
-def requerir_login(vista):
-    def envoltura(request, *args, **kwargs):
-        if request.session.get('nivel') != 'ADMIN':
-            messages.warning(request, "No autorizado.")
-            return redirect("login")
-        return vista(request, *args, **kwargs)
-    return envoltura
+def requerir_rol(*roles_permitidos):
+    def decorador(vista):
+        @wraps(vista)
+        def envoltura(request, *args, **kwargs):
+            nivel = request.session.get('nivel')
+            if nivel is None:
+                messages.warning(request, "Iniciá sesión.")
+                return redirect("login")
+            if nivel not in roles_permitidos:
+                messages.warning(request, "No tenés permisos para esta página.")
+                return redirect("inicio")
+            return vista(request, *args, **kwargs)
+        return envoltura
+    return decorador
 
 
 def login_view(request):
@@ -56,7 +64,6 @@ def logout_view(request):
     return redirect("login")
 
 
-@requerir_login
 def nuevo_usuario(request):
     if request.method == "POST":
         form = LoginForm(request.POST)
@@ -108,7 +115,7 @@ def candidatos(request):
         "active_tab": "candidatos",
     })
 
-
+@requerir_rol('ADMIN')
 def nuevo_candidato(request):
     guardado = False
 
@@ -129,7 +136,7 @@ def nuevo_candidato(request):
         "active_tab": "candidatos",
     })
 
-
+@requerir_rol('ADMIN')
 def editar_candidato(request, pk):
     candidato = datos.obtener_candidato(pk)
     if not candidato:
@@ -292,7 +299,7 @@ def comite(request):
         "active_tab": "comite",
     })
 
-
+@requerir_rol('ADMIN')
 def nuevo_comite(request):
     """
     Esta vista ya no es necesaria para el funcionamiento del alta,
@@ -324,6 +331,7 @@ def alumnos(request):
         "active_tab": "alumnos",
     })
 
+@requerir_rol('ADMIN')
 def nuevo_alumno(request):
     guardado = False
 
@@ -349,6 +357,7 @@ def nuevo_alumno(request):
         "active_tab": "alumnos",
     })
 
+@requerir_rol('ADMIN')
 def modificar_alumno(request):
     alumno = None
     form_buscar = BuscarDNIForm(request.GET or None)
@@ -396,6 +405,7 @@ def modificar_alumno(request):
 
     return render(request, "myapp/modificar_alumno.html", contexto)
 
+@requerir_rol('ADMIN')
 def eliminar_alumno(request):
     alumno = None
     form_buscar = BuscarDNIForm(request.GET or None)
@@ -441,7 +451,7 @@ def profesores(request):
         "active_tab": "profesores",
     })
 
-
+@requerir_rol('ADMIN')
 def nuevo_profesor(request):
     guardado = False
 
@@ -467,6 +477,7 @@ def nuevo_profesor(request):
         "active_tab": "nuevo_profesor",
     })
 
+@requerir_rol('ADMIN')
 def modificar_profesor(request):
     profesor = None
     form_buscar = BuscarDNIForm(request.GET or None)
@@ -514,6 +525,7 @@ def modificar_profesor(request):
 
     return render(request, "myapp/modificar_profesor.html", contexto)
 
+@requerir_rol('ADMIN')
 def eliminar_profesor(request):
     profesor = None
     form_buscar = BuscarDNIForm(request.GET or None)
