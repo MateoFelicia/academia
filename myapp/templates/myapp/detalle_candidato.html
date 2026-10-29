@@ -1,67 +1,118 @@
 {% extends "myapp/base.html" %}
 {% load static %}
 
-{% block title %}{{ candidato.nombre }} {{ candidato.apellidos }} — Archivo académico{% endblock %}
-{% block heading %}{{ candidato.nombre }} {{ candidato.apellidos }}{% endblock %}
-{% block subtitle %}DNI {{ candidato.dni }} · Legajo #{{ candidato.id }}{% endblock %}
-
-{% block extra_style %}
-<link rel="stylesheet" href="{% static 'myapp/css/candidato.css' %}">
-{% endblock %}
+{% block title %}{{ candidato.nombre }} {{ candidato.apellidos }} — ITR Control Central{% endblock %}
+{% block panel_tag %}GESTIÓN DE CANDIDATOS{% endblock %}
+{% block topbar_title %}Administración{% endblock %}
+{% block user_meta %}Ficha de postulante{% endblock %}
 
 {% block content %}
-{% if messages %}
-    <div class="messages">
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-        {% endfor %}
+<section class="page-hero" aria-labelledby="hero-title">
+    <div class="hero-copy">
+        <div class="eyebrow"><span>///</span> GESTIÓN DE CANDIDATOS</div>
+        <h1 id="hero-title">{{ candidato.nombre }} {{ candidato.apellidos }}</h1>
+        <p>DNI {{ candidato.dni }} · Legajo #{{ candidato.id }} · {{ candidato.tipo_deseado }}</p>
     </div>
-{% endif %}
+    <div class="hero-illustration" aria-hidden="true"></div>
+</section>
 
-<h2>Historial de llamadas</h2>
-{% if llamadas %}
-<div class="grid">
-    {% for llamada in llamadas %}
-    <article class="ficha">
-        <div class="ficha-top">
-            <div class="ficha-nombre">{{ llamada.fecha_hora|date:"d/m/Y H:i" }}</div>
-            <span class="sello-badge
-                {% if llamada.disposicion == 'concertada' %}verde
-                {% elif llamada.disposicion == 'no_interesado' %}rojo
-                {% else %}azul{% endif %}">
-                {{ llamada.get_disposicion_display }}
-            </span>
+<div class="generic-grid">
+    <section class="panel form-preview">
+        <div class="section-title">
+            <div><span>HISTORIAL</span><h2>Llamadas registradas</h2></div>
+            <a href="{% url 'candidatos' %}" class="text-button">Volver al listado</a>
         </div>
-        {% if llamada.entrevista %}
-<dl class="ficha-datos">
-    <dt>Entrevista</dt>
-    <dd>{{ llamada.entrevista.fecha }} — {{ llamada.entrevista.materia_a_cubrir }}, valoración {{ llamada.entrevista.valoracion }}</dd>
-</dl>
-{% elif llamada.form_entrevista %}
-<form method="post">
-    {% csrf_token %}
-    <input type="hidden" name="accion" value="entrevista">
-    <input type="hidden" name="llamada_id" value="{{ llamada.pk }}">
-    {{ llamada.form_entrevista.as_p }}
-    <button type="submit">Cargar entrevista</button>
-</form>
-{% endif %}
-    </article>
-    {% endfor %}
-</div>
-{% else %}
-<p class="vacio">Todavía no se registraron llamadas.</p>
-{% endif %}
 
-<div class="hoja">
-    <p class="hoja-numero">Registrar llamada</p>
-    <form method="post">
-    {% csrf_token %}
-    <input type="hidden" name="accion" value="llamada">
-    {{ form_llamada.as_p }}
-    <button type="submit">Guardar llamada</button>
-</form>
-</div>
+        {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+            <li class="{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
 
-<a class="link-alta" href="{% url 'candidatos' %}">← Volver al fichero</a>
+        {% if llamadas %}
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            {% for llamada in llamadas %}
+            <article class="agenda-item {% if llamada.entrevista %}{% endif %}" style="background: white; border: 1px solid var(--line); padding: 16px; border-radius: 0;">
+                <time>{{ llamada.fecha_hora|date:"d/m/Y H:i" }}</time>
+                <i style="background: {% if llamada.disposicion == 'concertada' %}var(--success){% elif llamada.disposicion == 'no_interesado' %}var(--red){% else %}var(--ink){% endif %}; border-color: {% if llamada.disposicion == 'concertada' %}var(--success){% elif llamada.disposicion == 'no_interesado' %}var(--red){% else %}var(--ink){% endif %};"></i>
+                <div>
+                    <strong>{{ llamada.disposicion_display }}</strong>
+                    <span>{{ llamada.fecha_hora|date:"d/m/Y H:i" }}</span>
+                    {% if llamada.entrevista %}
+                    <br><small style="color: var(--muted);">Entrevista: {{ llamada.entrevista.fecha }} — {{ llamada.entrevista.materia_a_cubrir }}, valoración {{ llamada.entrevista.valoracion }}</small>
+                    {% elif llamada.form_entrevista %}
+                    <form method="post" style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+                        {% csrf_token %}
+                        <input type="hidden" name="accion" value="entrevista">
+                        <input type="hidden" name="llamada_id" value="{{ llamada.id }}">
+                        <div class="form-group" style="margin: 0; flex: 1; min-width: 150px;">
+                            <label for="{{ llamada.form_entrevista.fecha.id_for_label }}">Fecha entrevista</label>
+                            {{ llamada.form_entrevista.fecha }}
+                        </div>
+                        <div class="form-group" style="margin: 0; flex: 1; min-width: 150px;">
+                            <label for="{{ llamada.form_entrevista.materia_a_cubrir.id_for_label }}">Materia</label>
+                            {{ llamada.form_entrevista.materia_a_cubrir }}
+                        </div>
+                        <div class="form-group" style="margin: 0; flex: 1; min-width: 150px;">
+                            <label for="{{ llamada.form_entrevista.valoracion.id_for_label }}">Valoración</label>
+                            {{ llamada.form_entrevista.valoracion }}
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="align-self: end;">Cargar entrevista</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-illustration" style="min-height: 120px;">
+            <span>📞</span>
+            <div><strong>Sin llamadas</strong><p>Todavía no se registraron contactos.</p></div>
+        </div>
+        {% endif %}
+    </section>
+
+    <section class="panel quick-panel">
+        <div class="section-title">
+            <div><span>NUEVA LLAMADA</span><h2>Registrar contacto</h2></div>
+        </div>
+        <form method="post" style="display: flex; flex-direction: column; gap: 12px;">
+            {% csrf_token %}
+            <input type="hidden" name="accion" value="llamada">
+            <div class="form-group">
+                <label for="{{ form_llamada.fecha_hora.id_for_label }}">Fecha y hora</label>
+                {{ form_llamada.fecha_hora }}
+            </div>
+            <div class="form-group">
+                <label for="{{ form_llamada.disposicion.id_for_label }}">Disposición</label>
+                {{ form_llamada.disposicion }}
+            </div>
+            <button type="submit" class="btn btn-primary">Guardar llamada</button>
+        </form>
+
+        <div class="section-title" style="margin-top: 24px; padding-top: 16px;">
+            <div><span>DATOS</span><h2>Perfil del candidato</h2></div>
+        </div>
+        <dl style="display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; font-size: 12px;">
+            <dt style="color: var(--muted); font-weight: 700; font-size: 9px; text-transform: uppercase;">DNI</dt>
+            <dd style="margin: 0;">{{ candidato.dni }}</dd>
+            <dt style="color: var(--muted); font-weight: 700; font-size: 9px; text-transform: uppercase;">TIPO DESEADO</dt>
+            <dd style="margin: 0;">{{ candidato.tipo_deseado }}</dd>
+            <dt style="color: var(--muted); font-weight: 700; font-size: 9px; text-transform: uppercase;">CURRÍCULUM</dt>
+            <dd style="margin: 0;">{{ candidato.curriculum|truncatechars:60 }}</dd>
+            <dt style="color: var(--muted); font-weight: 700; font-size: 9px; text-transform: uppercase;">MATERIAS</dt>
+            <dd style="margin: 0;">
+                {% for m in candidato.materias %}
+                <span class="status" style="font-size: 7px; margin-right: 4px; background: var(--paper); color: var(--ink);">#{{ m }}</span>
+                {% empty %}—{% endfor %}
+            </dd>
+        </dl>
+
+        <a href="{% url 'candidatos' %}" style="display: inline-flex; align-items: center; gap: 8px; margin-top: 16px; color: var(--muted); font-size: 11px; font-weight: 600; text-decoration: none;">
+            ← Volver al fichero
+        </a>
+    </section>
+</div>
 {% endblock %}

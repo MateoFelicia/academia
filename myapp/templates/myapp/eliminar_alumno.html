@@ -1,42 +1,61 @@
 {% extends "myapp/base.html" %}
 {% load static %}
 
-{% block title %}Eliminar alumno{% endblock %}
-{% block heading %}Eliminar alumno{% endblock %}
-{% block subtitle %}Buscar y dar de baja a un alumno existente{% endblock %}
-
-{% block extra_style %}
-<link rel="stylesheet" href="{% static 'myapp/css/alumno.css' %}">
-{% endblock %}
+{% block title %}Eliminar Alumno — ITR Control Central{% endblock %}
+{% block panel_tag %}GESTIÓN DE ALUMNOS{% endblock %}
+{% block topbar_title %}Administración{% endblock %}
+{% block user_meta %}Baja de matrícula{% endblock %}
 
 {% block content %}
-{% if messages %}
-    <div class="messages">
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-        {% endfor %}
+<section class="page-hero" aria-labelledby="hero-title">
+    <div class="hero-copy">
+        <div class="eyebrow"><span>///</span> GESTIÓN DE ALUMNOS</div>
+        <h1 id="hero-title">Eliminar alumno</h1>
+        <p>Buscá un alumno por DNI para darlo de baja de la matrícula.</p>
     </div>
-{% endif %}
+    <div class="hero-illustration" aria-hidden="true"></div>
+</section>
 
-<div class="modificar-area">
-    <h1>Eliminar Alumno</h1>
+<div class="generic-grid">
+    <section class="panel form-preview">
+        <div class="section-title"><div><span>BUSCAR</span><h2>Localizar alumno</h2></div></div>
 
-    <form method="get">
-        <div class="campo-grupo">
-            <label>DNI del alumno</label>
-            <input type="text" name="dni" placeholder="Ingrese DNI" required>
+        {% if messages %}
+        <ul class="messages">{% for message in messages %}<li class="{{ message.tags }}">{{ message }}</li>{% endfor %}</ul>
+        {% endif %}
+
+        <form method="GET" style="display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap;">
+            <div class="form-group" style="flex: 1; min-width: 200px; margin: 0;">
+                <label for="{{ form_buscar.dni.id_for_label }}">DNI</label>
+                {{ form_buscar.dni }}
+            </div>
+            <button type="submit" name="buscar" class="btn btn-primary" style="align-self: end;">Buscar</button>
+        </form>
+
+        {% if alumno %}
+        <div class="alert alert-warning" style="margin-bottom: 24px;">
+            <strong>Alumno encontrado:</strong> {{ alumno.nombre }} {{ alumno.apellidos|default:'' }} (DNI: {{ alumno.dni }})
         </div>
-        <button type="submit" name="buscar">Buscar</button>
-    </form>
 
-    {% if alumno %}
-    <hr>
-    <h2>Eliminar: {{ alumno.dni }} — {{ alumno.nombre }}</h2>
-    <form method="post" onsubmit="return confirm('¿Seguro que querés eliminar a { alumno.nombre }? No se puede deshacer.');">
-        {% csrf_token %}
-        <input type="hidden" name="dni" value="{{ alumno.dni }}">
-        <button type="submit" name="eliminar">Eliminar Alumno</button>
-    </form>
-    {% endif %}
+        <form method="post" style="max-width: 400px;">
+            {% csrf_token %}
+            <input type="hidden" name="dni" value="{{ alumno.dni }}">
+
+            <p style="margin-bottom: 16px; color: var(--muted); font-size: 13px;">Esta acción no se puede deshacer. El alumno será eliminado permanentemente de la matrícula.</p>
+
+            <div style="display: flex; gap: 12px;">
+                <button type="submit" name="eliminar" class="btn btn-danger">Eliminar alumno</button>
+                <a href="{% url 'alumnos' %}" class="btn" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">Cancelar</a>
+            </div>
+        </form>
+        {% endif %}
+    </section>
+
+    <section class="panel quick-panel">
+        <div class="section-title"><div><span>ACCESOS RÁPIDOS</span><h2>Tareas frecuentes</h2></div></div>
+        <a href="{% url 'alumnos' %}" style="text-decoration: none; color: inherit;"><button><span>01</span>Ver matrícula completa<svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 18 6-6-6-6"/></svg></button></a>
+        <a href="{% url 'nuevo_alumno' %}" style="text-decoration: none; color: inherit;"><button><span>02</span>Nuevo alumno<svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 18 6-6-6-6"/></svg></button></a>
+        <a href="{% url 'modificar_alumno' %}" style="text-decoration: none; color: inherit;"><button><span>03</span>Modificar alumno<svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 18 6-6-6-6"/></svg></button></a>
+    </section>
 </div>
 {% endblock %}

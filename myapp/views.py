@@ -619,3 +619,11 @@ def eliminar_profesor(request):
         "profesor": {"dni": profesor[0], "nombre": profesor[1]} if profesor else None,
         "active_tab": "profesores",
     })
+
+
+def set_role(request):
+    if request.method == "POST":
+        role = request.POST.get("rol", "admin")
+        if role in ("admin", "profesor", "alumno"):
+            request.session["rol"] = role
+    return redirect("index")

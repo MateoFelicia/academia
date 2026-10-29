@@ -1,42 +1,86 @@
 {% extends "myapp/base.html" %}
 {% load static %}
 
-{% block title %}Claustro — Archivo académico{% endblock %}
-{% block heading %}Libro de profesores{% endblock %}
-{% block subtitle %}
-{{ profesores|length }} profesor{{ profesores|length|pluralize:"es" }} registrado{{ profesores|length|pluralize }}
-{% endblock %}
-
-{% block extra_style %}
-<link rel="stylesheet" href="{% static 'myapp/css/profesor.css' %}">
-{% endblock %}
+{% block title %}Profesores — ITR Control Central{% endblock %}
+{% block panel_tag %}GESTIÓN DE PROFESORES{% endblock %}
+{% block topbar_title %}Administración{% endblock %}
+{% block user_meta %}Claustro docente{% endblock %}
 
 {% block content %}
+<section class="page-hero" aria-labelledby="hero-title">
+    <div class="hero-copy">
+        <div class="eyebrow"><span>///</span> GESTIÓN DE PROFESORES</div>
+        <h1 id="hero-title">Claustro docente</h1>
+        <p>{{ profesores|length }} profesor{{ profesores|length|pluralize:"es" }} registrado{{ profesores|length|pluralize }}</p>
+        <button class="primary-button" onclick="location.href='{% url 'nuevo_profesor' %}'">Nuevo profesor</button>
+    </div>
+    <div class="hero-illustration" aria-hidden="true"></div>
+</section>
+
 {% if profesores %}
-<div class="grid">
-    {% for p in profesores %}
-    <article class="ficha" style="--i: {{ forloop.counter0 }}">
-        <div class="ficha-top">
-            <div>
-                <div class="ficha-nombre">{{ p.nombre }} {{ p.apellidos }}</div>
-                <div class="ficha-dni">DNI {{ p.dni }}</div>
-            </div>
-            {% if p.tipo %}
-            <span class="sello-badge {% cycle 'azul' 'rojo' 'verde' %}">{{ p.tipo }}</span>
-            {% endif %}
-        </div>
-        <dl class="ficha-datos">
-            <dt>Titulación</dt>
-            <dd>{{ p.titulacion }}</dd>
-            <dt>Legajo</dt>
-            <dd>#{{ forloop.counter }}</dd>
-        </dl>
-    </article>
-    {% endfor %}
+<div class="management-summary">
+    <div><span>TOTAL REGISTRADOS</span><strong>{{ profesores|length }}</strong></div>
+    <div><span>EN ACTIVIDAD</span><strong>{% widthratio profesores|length 90 100|default:0 %}</strong></div>
+    <div><span>ESPECIALIDADES</span><strong>—</strong></div>
 </div>
+
+<section class="panel table-panel">
+    <div class="table-toolbar">
+        <form method="GET" class="search-box" style="flex: 1;">
+            <span aria-hidden="true">🔍</span>
+            <input type="search" name="q" placeholder="Buscar por nombre, DNI o especialidad..." value="{{ request.GET.q|default:'' }}">
+        </form>
+        <button type="button" class="filter-button">Filtros <span>0</span></button>
+        <a href="{% url 'nuevo_profesor' %}" class="filter-button" style="text-decoration: none; color: inherit; display: flex; align-items: center;">Nuevo profesor</a>
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>PROFESOR</th>
+                    <th>DNI</th>
+                    <th>TITULACIÓN</th>
+                    <th>TIPO</th>
+                    <th>LEGAJO</th>
+                    <th>ACCIONES</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in profesores %}
+                <tr>
+                    <td>
+                        <span class="table-avatar">{{ p.nombre|first }}{{ p.apellidos|first }}</span>
+                        <strong>{{ p.nombre }} {{ p.apellidos }}</strong>
+                    </td>
+                    <td>{{ p.dni }}</td>
+                    <td>{{ p.titulacion }}</td>
+                    <td>
+                        <span class="status {% if p.tipo == 'TUTOR' %}warning{% elif p.tipo == 'ESPECIALISTA' %}{% else %}{% endif %}">
+                            {{ p.tipo }}
+                        </span>
+                    </td>
+                    <td>#{{ forloop.counter }}</td>
+                    <td>
+                        <a href="{% url 'modificar_profesor' %}?dni={{ p.dni }}" class="btn btn-sm">Modificar</a>
+                        <a href="{% url 'eliminar_profesor' %}?dni={{ p.dni }}" class="btn btn-sm btn-danger">Eliminar</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="pagination">
+        <span>Mostrando 1–{{ profesores|length }} de {{ profesores|length }}</span>
+        <div><button disabled>←</button><button class="active">1</button><button disabled>→</button></div>
+    </div>
+</section>
 {% else %}
-<p class="vacio">Todavía no hay profesores cargados.</p>
+<section class="panel" style="text-align: center; padding: 60px 20px;">
+    <div class="empty-illustration">
+        <span>👨‍🏫</span>
+        <div><strong>Sin profesores</strong><p>Todavía no hay docentes cargados.</p></div>
+    </div>
+    <a href="{% url 'nuevo_profesor' %}" class="primary-button" style="margin-top: 16px; display: inline-flex;">Nuevo profesor</a>
+</section>
 {% endif %}
-<a class="link-alta" href="{% url 'nuevo_profesor' %}">← Cargar otro profesor</a>
-<a class="link-alta" href="{% url 'modificar_profesor' %}">← modificar un profesor</a>
 {% endblock %}

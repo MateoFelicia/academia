@@ -1,29 +1,83 @@
 {% extends "myapp/base.html" %}
 {% load static %}
 
-{% block title %}Nuevo profesor — Archivo académico{% endblock %}
-{% block heading %}Hoja de ingreso{% endblock %}
-{% block subtitle %}Alta de un nuevo profesor en la planta docente{% endblock %}
-
-{% block extra_style %}
-<link rel="stylesheet" href="{% static 'myapp/css/profesor.css' %}">
-{% endblock %}
+{% block title %}Nuevo Profesor — ITR Control Central{% endblock %}
+{% block panel_tag %}GESTIÓN DE PROFESORES{% endblock %}
+{% block topbar_title %}Administración{% endblock %}
+{% block user_meta %}Alta de docente{% endblock %}
 
 {% block content %}
-<div class="hoja">
-    <p class="hoja-numero">Formulario de alta · planta docente {{ now|default:"2026" }}</p>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Añadir profesor</button>
-    </form>
-</div>
+<section class="page-hero" aria-labelledby="hero-title">
+    <div class="hero-copy">
+        <div class="eyebrow"><span>///</span> GESTIÓN DE PROFESORES</div>
+        <h1 id="hero-title">Nuevo profesor</h1>
+        <p>Registrá un nuevo docente en el claustro.</p>
+    </div>
+    <div class="hero-illustration" aria-hidden="true"></div>
+</section>
 
-{% if guardado %}
-<div class="confirmacion">
-    Profesor guardado correctamente. ¿Querés seguir cargando?
-    <a class="primaria" href="{% url 'nuevo_profesor' %}">Sí, cargar otro</a>
-    <a class="secundaria" href="{% url 'profesores' %}">No, ver planta docente</a>
+<div class="generic-grid">
+    <section class="panel form-preview">
+        <div class="section-title"><div><span>FORMULARIO</span><h2>Datos del profesor</h2></div></div>
+
+        {% if messages %}
+        <ul class="messages">{% for message in messages %}<li class="{{ message.tags }}">{{ message }}</li>{% endfor %}</ul>
+        {% endif %}
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="{{ form.dni.id_for_label }}">DNI</label>
+                {{ form.dni }}{% if form.dni.errors %}<div class="alert alert-danger">{{ form.dni.errors }}</div>{% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.nombre.id_for_label }}">Nombre</label>
+                {{ form.nombre }}{% if form.nombre.errors %}<div class="alert alert-danger">{{ form.nombre.errors }}</div>{% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.apellidos.id_for_label }}">Apellidos</label>
+                {{ form.apellidos }}{% if form.apellidos.errors %}<div class="alert alert-danger">{{ form.apellidos.errors }}</div>{% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.domicilio.id_for_label }}">Domicilio</label>
+                {{ form.domicilio }}{% if form.domicilio.errors %}<div class="alert alert-danger">{{ form.domicilio.errors }}</div>{% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.nivel_estudios.id_for_label }}">Nivel de estudios</label>
+                {{ form.nivel_estudios }}{% if form.nivel_estudios.errors %}<div class="alert alert-danger">{{ form.nivel_estudios.errors }}</div>{% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.titulacion.id_for_label }}">Titulación</label>
+                {{ form.titulacion }}{% if form.titulacion.errors %}<div class="alert alert-danger">{{ form.titulacion.errors }}</div>{% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.tipo.id_for_label }}">Tipo</label>
+                {{ form.tipo }}{% if form.tipo.errors %}<div class="alert alert-danger">{{ form.tipo.errors }}</div>{% endif %}
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: 20px;">
+                <button type="submit" class="btn btn-primary">Guardar profesor</button>
+                <a href="{% url 'profesores' %}" class="btn" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">Cancelar</a>
+            </div>
+        </form>
+
+        {% if guardado %}
+        <div class="alert alert-success" style="margin-top: 16px;">Profesor guardado correctamente.</div>
+        {% endif %}
+    </section>
+
+    <section class="panel quick-panel">
+        <div class="section-title"><div><span>ACCESOS RÁPIDOS</span><h2>Tareas frecuentes</h2></div></div>
+        <a href="{% url 'profesores' %}" style="text-decoration: none; color: inherit;"><button><span>01</span>Ver claustro completo<svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 18 6-6-6-6"/></svg></button></a>
+        <a href="{% url 'modificar_profesor' %}" style="text-decoration: none; color: inherit;"><button><span>02</span>Modificar profesor<svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 18 6-6-6-6"/></svg></button></a>
+        <a href="{% url 'eliminar_profesor' %}" style="text-decoration: none; color: inherit;"><button><span>03</span>Eliminar profesor<svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 18 6-6-6-6"/></svg></button></a>
+    </section>
 </div>
-{% endif %}
 {% endblock %}

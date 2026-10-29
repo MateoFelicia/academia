@@ -1,29 +1,113 @@
 {% extends "myapp/base.html" %}
 {% load static %}
 
-{% block title %}Nuevo candidato — Archivo académico{% endblock %}
-{% block heading %}Ficha de postulación{% endblock %}
-{% block subtitle %}Alta de un nuevo candidato al proceso de selección{% endblock %}
-
-{% block extra_style %}
-<link rel="stylesheet" href="{% static 'myapp/css/candidato.css' %}">
-{% endblock %}
+{% block title %}Nuevo Candidato — ITR Control Central{% endblock %}
+{% block panel_tag %}GESTIÓN DE CANDIDATOS{% endblock %}
+{% block topbar_title %}Administración{% endblock %}
+{% block user_meta %}Alta de postulante{% endblock %}
 
 {% block content %}
-<div class="hoja">
-    <p class="hoja-numero">Formulario de alta · postulantes</p>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Añadir candidato</button>
-    </form>
-</div>
+<section class="page-hero" aria-labelledby="hero-title">
+    <div class="hero-copy">
+        <div class="eyebrow"><span>///</span> GESTIÓN DE CANDIDATOS</div>
+        <h1 id="hero-title">Nuevo postulante</h1>
+        <p>Completá los datos del candidato para iniciar su proceso de selección.</p>
+    </div>
+    <div class="hero-illustration" aria-hidden="true"></div>
+</section>
 
-{% if guardado %}
-<div class="confirmacion">
-    Candidato guardado correctamente. ¿Querés seguir cargando?
-    <a class="primaria" href="{% url 'nuevo_candidato' %}">Sí, cargar otro</a>
-    <a class="secundaria" href="{% url 'candidatos' %}">No, ver fichero</a>
+<div class="generic-grid">
+    <section class="panel form-preview">
+        <div class="section-title">
+            <div><span>FORMULARIO</span><h2>Datos del candidato</h2></div>
+        </div>
+
+        {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+            <li class="{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="{{ form.dni.id_for_label }}">DNI</label>
+                {{ form.dni }}
+                {% if form.dni.errors %}
+                <div class="alert alert-danger">{{ form.dni.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.nombre.id_for_label }}">Nombre</label>
+                {{ form.nombre }}
+                {% if form.nombre.errors %}
+                <div class="alert alert-danger">{{ form.nombre.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.apellidos.id_for_label }}">Apellidos</label>
+                {{ form.apellidos }}
+                {% if form.apellidos.errors %}
+                <div class="alert alert-danger">{{ form.apellidos.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.curriculum.id_for_label }}">Currículum</label>
+                {{ form.curriculum }}
+                {% if form.curriculum.errors %}
+                <div class="alert alert-danger">{{ form.curriculum.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.tipo_deseado.id_for_label }}">Tipo de cargo deseado</label>
+                {{ form.tipo_deseado }}
+                {% if form.tipo_deseado.errors %}
+                <div class="alert alert-danger">{{ form.tipo_deseado.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.materias.id_for_label }}">Materias (seleccionar una o más)</label>
+                {{ form.materias }}
+                {% if form.materias.errors %}
+                <div class="alert alert-danger">{{ form.materias.errors }}</div>
+                {% endif %}
+                <small style="color: var(--muted);">Mantené Ctrl/Cmd para seleccionar múltiples</small>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: 20px;">
+                <button type="submit" class="btn btn-primary">Guardar candidato</button>
+                <a href="{% url 'candidatos' %}" class="btn" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">Cancelar</a>
+            </div>
+        </form>
+
+        {% if guardado %}
+        <div class="alert alert-success" style="margin-top: 16px;">
+            Candidato guardado correctamente.
+        </div>
+        {% endif %}
+    </section>
+
+    <section class="panel quick-panel">
+        <div class="section-title">
+            <div><span>ACCESOS RÁPIDOS</span><h2>Tareas frecuentes</h2></div>
+        </div>
+        <a href="{% url 'candidatos' %}" style="text-decoration: none; color: inherit;">
+            <button><span>01</span>Ver listado completo<svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 18 6-6-6-6"/></svg></button>
+        </a>
+        <a href="{% url 'comite' %}" style="text-decoration: none; color: inherit;">
+            <button><span>02</span>Comités evaluadores<svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 18 6-6-6-6"/></svg></button>
+        </a>
+        <a href="{% url 'index' %}" style="text-decoration: none; color: inherit;">
+            <button><span>03</span>Volver al panel<svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 18 6-6-6-6"/></svg></button>
+        </a>
+    </section>
 </div>
-{% endif %}
 {% endblock %}

@@ -1,31 +1,103 @@
 {% extends "myapp/base.html" %}
 {% load static %}
 
-{% block title %}Editar candidato — Archivo académico{% endblock %}
-{% block heading %}Modificar ficha{% endblock %}
-{% block subtitle %}Editando a {{ candidato.nombre }} {{ candidato.apellidos }}{% endblock %}
-
-{% block extra_style %}
-<link rel="stylesheet" href="{% static 'myapp/css/candidato.css' %}">
-{% endblock %}
+{% block title %}Editar Candidato — ITR Control Central{% endblock %}
+{% block panel_tag %}GESTIÓN DE CANDIDATOS{% endblock %}
+{% block topbar_title %}Administración{% endblock %}
+{% block user_meta %}Edición de postulante{% endblock %}
 
 {% block content %}
-{% if messages %}
-    <div class="messages">
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-        {% endfor %}
+<section class="page-hero" aria-labelledby="hero-title">
+    <div class="hero-copy">
+        <div class="eyebrow"><span>///</span> GESTIÓN DE CANDIDATOS</div>
+        <h1 id="hero-title">Editar postulante</h1>
+        <p>{{ candidato.nombre }} {{ candidato.apellidos }} · Legajo #{{ candidato.id }}</p>
     </div>
-{% endif %}
+    <div class="hero-illustration" aria-hidden="true"></div>
+</section>
 
-<div class="hoja">
-    <p class="hoja-numero">Legajo #{{ candidato.id }}</p>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Guardar cambios</button>
-    </form>
+<div class="generic-grid">
+    <section class="panel form-preview">
+        <div class="section-title">
+            <div><span>FORMULARIO</span><h2>Datos del candidato</h2></div>
+            <a href="{% url 'detalle_candidato' candidato.id %}" class="text-button">Ver ficha</a>
+        </div>
+
+        {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+            <li class="{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="{{ form.dni.id_for_label }}">DNI</label>
+                {{ form.dni }}
+                {% if form.dni.errors %}<div class="alert alert-danger">{{ form.dni.errors }}</div>{% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.nombre.id_for_label }}">Nombre</label>
+                {{ form.nombre }}
+                {% if form.nombre.errors %}<div class="alert alert-danger">{{ form.nombre.errors }}</div>{% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.apellidos.id_for_label }}">Apellidos</label>
+                {{ form.apellidos }}
+                {% if form.apellidos.errors %}<div class="alert alert-danger">{{ form.apellidos.errors }}</div>{% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.curriculum.id_for_label }}">Currículum</label>
+                {{ form.curriculum }}
+                {% if form.curriculum.errors %}<div class="alert alert-danger">{{ form.curriculum.errors }}</div>{% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.tipo_deseado.id_for_label }}">Tipo de cargo deseado</label>
+                {{ form.tipo_deseado }}
+                {% if form.tipo_deseado.errors %}<div class="alert alert-danger">{{ form.tipo_deseado.errors }}</div>{% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.materias.id_for_label }}">Materias (seleccionar una o más)</label>
+                {{ form.materias }}
+                {% if form.materias.errors %}<div class="alert alert-danger">{{ form.materias.errors }}</div>{% endif %}
+                <small style="color: var(--muted);">Mantené Ctrl/Cmd para seleccionar múltiples</small>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: 20px;">
+                <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                <a href="{% url 'detalle_candidato' candidato.id %}" class="btn" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">Cancelar</a>
+            </div>
+        </form>
+    </section>
+
+    <section class="panel quick-panel">
+        <div class="section-title"><div><span>DATOS</span><h2>Perfil actual</h2></div></div>
+        <dl style="display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; font-size: 12px;">
+            <dt style="color: var(--muted); font-weight: 700; font-size: 9px; text-transform: uppercase;">DNI</dt>
+            <dd style="margin: 0;">{{ candidato.dni }}</dd>
+            <dt style="color: var(--muted); font-weight: 700; font-size: 9px; text-transform: uppercase;">TIPO DESEADO</dt>
+            <dd style="margin: 0;">{{ candidato.tipo_deseado }}</dd>
+            <dt style="color: var(--muted); font-weight: 700; font-size: 9px; text-transform: uppercase;">CURRÍCULUM</dt>
+            <dd style="margin: 0;">{{ candidato.curriculum|truncatechars:60 }}</dd>
+            <dt style="color: var(--muted); font-weight: 700; font-size: 9px; text-transform: uppercase;">MATERIAS</dt>
+            <dd style="margin: 0;">
+                {% for m in candidato.materias %}
+                <span class="status" style="font-size: 7px; margin-right: 4px; background: var(--paper); color: var(--ink);">#{{ m }}</span>
+                {% empty %}—{% endfor %}
+            </dd>
+        </dl>
+
+        <a href="{% url 'candidatos' %}" style="display: inline-flex; align-items: center; gap: 8px; margin-top: 16px; color: var(--muted); font-size: 11px; font-weight: 600; text-decoration: none;">
+            ← Volver al listado
+        </a>
+    </section>
 </div>
-
-<a class="link-alta" href="{% url 'candidatos' %}">← Volver al fichero</a>
 {% endblock %}

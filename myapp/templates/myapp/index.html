@@ -1,44 +1,107 @@
 {% extends "myapp/base.html" %}
 {% load static %}
 
-{% block title %}Archivo académico — Portada{% endblock %}
-{% block heading %}Archivo académico{% endblock %}
-{% block subtitle %}Instituto Técnico · legajo de postulantes, comités y cuerpo docente{% endblock %}
-
-{% block extra_style %}
-<link rel="stylesheet" href="{% static 'myapp/css/portada.css' %}">
-{% endblock %}
+{% block title %}ITR Control Central — Resumen{% endblock %}
+{% block panel_tag %}PANEL CENTRAL{% endblock %}
+{% block topbar_title %}Administración{% endblock %}
 
 {% block content %}
-<section class="portada">
-    <p class="portada-sello">Legajo N.º 001 · actualizado ciclo lectivo 2026</p>
-    <h2 class="portada-titulo">Bienvenido al archivo</h2>
-    <p class="portada-copete">
-        Cuatro libros conforman este archivo: postulantes en proceso de selección,
-        actas del comité evaluador, fichero del cuerpo docente y matrícula de alumnos.
-        Elegí un libro para consultarlo.
-    </p>
-    <div class="secciones">
-        <a class="seccion" href="{% url 'candidatos' %}">
-            <span class="seccion-rotulo">Libro I</span>
-            <div class="seccion-nombre">Candidatos</div>
-            <div class="seccion-detalle">Postulantes con entrevista y materia asignada</div>
-        </a>
-        <a class="seccion" href="{% url 'comite' %}">
-            <span class="seccion-rotulo">Libro II</span>
-            <div class="seccion-nombre">Comités</div>
-            <div class="seccion-detalle">Actas firmadas por presidente, secretario y vocal</div>
-        </a>
-        <a class="seccion" href="{% url 'profesores' %}">
-            <span class="seccion-rotulo">Libro III</span>
-            <div class="seccion-nombre">Profesores</div>
-            <div class="seccion-detalle">Fichero docente por tutoría y especialidad</div>
-        </a>
-        <a class="seccion" href="{% url 'nuevo_alumno' %}">
-            <span class="seccion-rotulo">Libro IV</span>
-            <div class="seccion-nombre">Alumnos</div>
-            <div class="seccion-detalle">Alta e inspección de la matrícula vigente</div>
-        </a>
+<section class="page-hero" aria-labelledby="hero-title">
+    <div class="hero-copy">
+        <div class="eyebrow"><span>///</span> PANEL CENTRAL</div>
+        <h1 id="hero-title">El instituto, bajo control.</h1>
+        <p>Supervisá la actividad académica y operativa desde un único tablero.</p>
+        <button class="primary-button">Nueva inscripción</button>
     </div>
+    <div class="hero-illustration" aria-hidden="true"></div>
 </section>
+
+<div class="stats-grid">
+    <article class="stat-card red">
+        <div class="stat-top">
+            <span class="stat-icon">👥</span>
+            <span class="mini-code">ITR / 05</span>
+        </div>
+        <span class="stat-label">ALUMNOS ACTIVOS</span>
+        <strong class="stat-value">1.248</strong>
+        <small>+36 este mes</small>
+    </article>
+    <article class="stat-card">
+        <div class="stat-top">
+            <span class="stat-icon">👨‍🏫</span>
+            <span class="mini-code">ITR / 05</span>
+        </div>
+        <span class="stat-label">PROFESORES</span>
+        <strong class="stat-value">84</strong>
+        <small>78 en actividad</small>
+    </article>
+    <article class="stat-card">
+        <div class="stat-top">
+            <span class="stat-icon">⚙️</span>
+            <span class="mini-code">ITR / 05</span>
+        </div>
+        <span class="stat-label">TALLERES</span>
+        <strong class="stat-value">12</strong>
+        <small>10 operativos</small>
+    </article>
+    <article class="stat-card">
+        <div class="stat-top">
+            <span class="stat-icon">📚</span>
+            <span class="mini-code">ITR / 05</span>
+        </div>
+        <span class="stat-label">CURSOS ABIERTOS</span>
+        <strong class="stat-value">42</strong>
+        <small>Ciclo lectivo 2025</small>
+    </article>
+</div>
+
+<div class="dashboard-grid">
+    <section class="panel">
+        <div class="section-title">
+            <div><span>ACTIVIDAD ACADÉMICA</span><h2>Panorama semanal</h2></div>
+            <button class="text-button">Ver reporte</button>
+        </div>
+        <div class="chart">
+            <div class="bar"><i style="height: 42%"></i><span>L</span></div>
+            <div class="bar"><i style="height: 64%"></i><span>M</span></div>
+            <div class="bar"><i style="height: 52%"></i><span>X</span></div>
+            <div class="bar"><i style="height: 78%"></i><span>J</span></div>
+            <div class="bar"><i style="height: 68%"></i><span>V</span></div>
+            <div class="bar active"><i style="height: 88%"></i><span>S</span></div>
+            <div class="bar"><i style="height: 57%"></i><span>D</span></div>
+            <div class="chart-lines"><i /><i /><i /></div>
+        </div>
+        <div class="chart-legend">
+            <span><i class="red-dot" />Asistencia promedio <strong>91%</strong></span>
+            <span><i />Clases dictadas <strong>186</strong></span>
+        </div>
+    </section>
+
+    <section class="panel agenda-panel">
+        <div class="section-title">
+            <div><span>HOY · 14 MAY</span><h2>Agenda del día</h2></div>
+            <button class="text-button">Calendario</button>
+        </div>
+        <div class="agenda-item active">
+            <time>08:00</time>
+            <i></i>
+            <div><strong>Inicio turno mañana</strong><span>12 cursos · Edificio principal</span></div>
+        </div>
+        <div class="agenda-item active">
+            <time>10:30</time>
+            <i></i>
+            <div><strong>Reunión de coordinación</strong><span>Sala técnica 02</span></div>
+        </div>
+        <div class="agenda-item">
+            <time>14:00</time>
+            <i></i>
+            <div><strong>Práctica de motores</strong><span>Taller de mecánica</span></div>
+        </div>
+        <div class="agenda-item">
+            <time>17:30</time>
+            <i></i>
+            <div><strong>Cierre de calificaciones</strong><span>5° año · Ciclo superior</span></div>
+        </div>
+    </section>
+</div>
 {% endblock %}

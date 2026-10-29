@@ -22,4 +22,5 @@ urlpatterns = [
     path("profesores/nuevo/", views.nuevo_profesor, name="nuevo_profesor"),
     path("profesores/modificar/", views.modificar_profesor, name="modificar_profesor"),
     path("profesores/eliminar/", views.eliminar_profesor, name="eliminar_profesor"),
+    path("set-role/", views.set_role, name="set_role"),
 ]

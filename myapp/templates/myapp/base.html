@@ -2,57 +2,156 @@
 
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>{% block title %}Archivo académico{% endblock %}</title>
-
-    <link rel="stylesheet" href="{% static 'myapp/css/style.css' %}">
-
+    <title>{% block title %}ITR Control Central{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'myapp/css/design-system.css' %}">
     {% block extra_style %}{% endblock %}
 </head>
-
 <body>
+    <div class="app-shell role-{{ request.session.rol|default:'admin' }}">
+        <aside class="sidebar" id="sidebar">
+            <div class="brand">
+                <div class="brand-mark"><span>ITR</span></div>
+                <div><strong>CONTROL</strong><small>CENTRAL</small></div>
+            </div>
+            <div class="panel-tag">{% block panel_tag %}PANEL CENTRAL{% endblock %}</div>
+            <nav class="side-nav" aria-label="Navegación principal">
+                <a href="{% url 'index' %}" class="{% if active_tab == 'index' %}active{% endif %}">
+                    <span class="nav-icon">📊</span><span>Resumen</span>
+                    {% if active_tab == 'index' %}<span>▸</span>{% endif %}
+                </a>
+                <a href="{% url 'candidatos' %}" class="{% if active_tab == 'candidatos' %}active{% endif %}">
+                    <span class="nav-icon">👥</span><span>Candidatos</span>
+                    {% if active_tab == 'candidatos' %}<span>▸</span>{% endif %}
+                </a>
+                <a href="{% url 'nuevo_candidato' %}" class="{% if active_tab == 'candidatos' %}active{% endif %}">
+                    <span class="nav-icon">➕</span><span>Candidato nuevo</span>
+                    {% if active_tab == 'candidatos' %}<span>▸</span>{% endif %}
+                </a>
+                <a href="{% url 'comite' %}" class="{% if active_tab == 'comite' %}active{% endif %}">
+                    <span class="nav-icon">📋</span><span>Comités</span>
+                    {% if active_tab == 'comite' %}<span>▸</span>{% endif %}
+                </a>
+                <a href="{% url 'alumnos' %}" class="{% if active_tab == 'alumnos' %}active{% endif %}">
+                    <span class="nav-icon">🎓</span><span>Alumnos</span>
+                    {% if active_tab == 'alumnos' %}<span>▸</span>{% endif %}
+                </a>
+                <a href="{% url 'nuevo_alumno' %}" class="{% if active_tab == 'nuevo_alumno' %}active{% endif %}">
+                    <span class="nav-icon">➕</span><span>Alumno nuevo</span>
+                    {% if active_tab == 'nuevo_alumno' %}<span>▸</span>{% endif %}
+                </a>
+                <a href="{% url 'modificar_alumno' %}" class="{% if active_tab == 'modificar_alumno' %}active{% endif %}">
+                    <span class="nav-icon">✏️</span><span>Modificar Alumno</span>
+                    {% if active_tab == 'modificar_alumno' %}<span>▸</span>{% endif %}
+                </a>
+                <a href="{% url 'eliminar_alumno' %}" class="{% if active_tab == 'eliminar_alumno' %}active{% endif %}">
+                    <span class="nav-icon">🗑️</span><span>Eliminar Alumno</span>
+                    {% if active_tab == 'eliminar_alumno' %}<span>▸</span>{% endif %}
+                </a>
+                <a href="{% url 'profesores' %}" class="{% if active_tab == 'profesores' %}active{% endif %}">
+                    <span class="nav-icon">👨‍🏫</span><span>Profesores</span>
+                    {% if active_tab == 'profesores' %}<span>▸</span>{% endif %}
+                </a>
+                <a href="{% url 'nuevo_profesor' %}" class="{% if active_tab == 'nuevo_profesor' %}active{% endif %}">
+                    <span class="nav-icon">➕</span><span>Profesor nuevo</span>
+                    {% if active_tab == 'nuevo_profesor' %}<span>▸</span>{% endif %}
+                </a>
+                <a href="{% url 'modificar_profesor' %}" class="{% if active_tab == 'modificar_profesor' %}active{% endif %}">
+                    <span class="nav-icon">✏️</span><span>Modificar Profesor</span>
+                    {% if active_tab == 'modificar_profesor' %}<span>▸</span>{% endif %}
+                </a>
+                <a href="{% url 'eliminar_profesor' %}" class="{% if active_tab == 'eliminar_profesor' %}active{% endif %}">
+                    <span class="nav-icon">🗑️</span><span>Eliminar Profesor</span>
+                    {% if active_tab == 'eliminar_profesor' %}<span>▸</span>{% endif %}
+                </a>
+                {% if request.session.usuario_dni %}
+                <a href="{% url 'nuevo_usuario' %}" class="{% if active_tab == 'nuevo_usuario' %}active{% endif %}">
+                    <span class="nav-icon">👤</span><span>Crear usuario</span>
+                    {% if active_tab == 'nuevo_usuario' %}<span>▸</span>{% endif %}
+                </a>
+                {% endif %}
+            </nav>
+            <div class="sidebar-note">
+                <span>GESTIÓN ACADÉMICA</span>
+                <strong>ITR · 2025</strong>
+                <small>Instituto Técnico Renault</small>
+            </div>
+        </aside>
 
-    <header class="top">
-        <h1>{% block heading %}Archivo académico{% endblock %}</h1>
-        <p class="subtitle">{% block subtitle %}{% endblock %}</p>
-        <nav class="tabs">
-            <a href="{% url 'index' %}" {% if active_tab == 'index' %}class="active" {% endif %}>Portada</a>
-            <a href="{% url 'candidatos' %}" {% if active_tab == 'candidatos' %}class="active" {% endif %}>Candidatos</a>
-            <a href="{% url 'nuevo_candidato' %}" {% if active_tab == 'candidatos' %}class="active" {% endif %}>Candidato nuevo</a>
-            <a href="{% url 'comite' %}" {% if active_tab == 'comite' %}class="active" {% endif %}>Comités</a>
-            <a href="{% url 'alumnos' %}" {% if active_tab == 'alumnos' %}class="active" {% endif %}>Alumnos</a>
-            <a href="{% url 'nuevo_alumno' %}" {% if active_tab == 'nuevo_alumno' %}class="active" {% endif %}>Alumno nuevo</a>
-            <a href="{% url 'modificar_alumno' %}" {% if active_tab == 'modificar_alumno' %}class="active" {% endif %}>Modificar Alumno</a>
-            <a href="{% url 'eliminar_alumno' %}"  {% if active_tab == 'eliminar_alumno' %}class="active" {% endif %}>Eliminar Alumno</a>
-            <a href="{% url 'profesores' %}" {% if active_tab == 'profesores' %}class="active" {% endif %}>Profesores</a>
-            <a href="{% url 'nuevo_profesor' %}" {% if active_tab == 'nuevo_profesor' %}class="active" {% endif %}>Profesor nuevo</a>
-            <a href="{% url 'modificar_profesor' %}" {% if active_tab == 'modificar_profesor' %}class="active" {% endif %}>Modificar Profesor</a>
-            <a href="{% url 'eliminar_profesor' %}" {% if active_tab == 'eliminar_profesor' %}class="active" {% endif %}>Eliminar Profesor</a>
-            {% if request.session.usuario_dni %}
-                <a href="{% url 'nuevo_usuario' %}" {% if active_tab == 'nuevo_usuario' %}class="active" {% endif %}>Crear usuario</a>
-            {% endif %}
-        </nav>
-        {% if request.session.usuario_nombre %}
-            <p class="sesion-info">
-                Sesión: {{ request.session.usuario_nombre }}
-                (<a href="{% url 'logout' %}" class="sesion-salir">Salir</a>)
-            </p>
-        {% endif %}
-    </header>
-    <main>
-        {% block content %}{% endblock %}
-    </main>
+        <div class="app-main">
+            <header class="topbar">
+                <button class="mobile-menu" id="mobileMenu" aria-label="Abrir navegación">☰</button>
+                <div class="topbar-label">
+                    <span>ITR CONTROL CENTRAL</span>
+                    <strong>{% block topbar_title %}Administración{% endblock %}</strong>
+                </div>
+                <div class="top-actions">
+                    <button class="icon-button" aria-label="Notificaciones">🔔<i></i></button>
+                    {% if request.session.usuario_nombre %}
+                    <div class="user-chip">
+                        <div class="avatar">{{ request.session.usuario_nombre|first }}{{ request.session.usuario_apellidos|first|default:'' }}</div>
+                        <div><strong>{{ request.session.usuario_nombre }}</strong><small>{% block user_meta %}{% endblock %}</small></div>
+                        <span class="chevron">⌄</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </header>
 
-    <footer class="site">
-        {% block footer %}
-            Datos ficticios generados para prototipar la interfaz.
-        {% endblock %}
-    </footer>
+            <main class="content">
+                {% if messages %}
+                <ul class="messages">
+                    {% for message in messages %}
+                    <li class="{{ message.tags }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
 
+                <div class="role-switch" aria-label="Cambiar vista">
+                    <button class="{% if request.session.rol == 'admin' or not request.session.rol %}active{% endif %}" onclick="setRole('admin')">Administración</button>
+                    <button class="{% if request.session.rol == 'profesor' %}active{% endif %}" onclick="setRole('profesor')">Profesores</button>
+                    <button class="{% if request.session.rol == 'alumno' %}active{% endif %}" onclick="setRole('alumno')">Alumnos</button>
+                </div>
+
+                {% block content %}{% endblock %}
+
+                <footer>
+                    <span>ITR CONTROL CENTRAL · SISTEMA ACADÉMICO</span>
+                    <span>VERSIÓN 2.5.1 / TODO OPERATIVO</span>
+                </footer>
+            </main>
+        </div>
+
+        <button class="nav-scrim" id="navScrim" aria-label="Cerrar navegación"></button>
+    </div>
+
+    <script>
+    const sidebar = document.getElementById('sidebar');
+    const navScrim = document.getElementById('navScrim');
+    const mobileMenu = document.getElementById('mobileMenu');
+
+    mobileMenu?.addEventListener('click', () => {
+        sidebar.classList.add('open');
+        navScrim.classList.add('open');
+    });
+    navScrim?.addEventListener('click', () => {
+        sidebar.classList.remove('open');
+        navScrim.classList.remove('open');
+    });
+
+    function setRole(role) {
+        fetch('/set-role/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': getCookie('csrftoken') },
+            body: 'rol=' + role
+        }).then(() => location.reload());
+    }
+    function getCookie(name) {
+        let v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+        return v ? v[2] : null;
+    }
+    </script>
+    {% block extra_script %}{% endblock %}
 </body>
-
 </html>

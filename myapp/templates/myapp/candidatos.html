@@ -1,44 +1,102 @@
 {% extends "myapp/base.html" %}
-
-{% block title %}Candidatos — Archivo académico{% endblock %}
-{% block heading %}Fichero de postulantes{% endblock %}
-{% block subtitle %}{{ candidatos|length }} candidato{{ candidatos|length|pluralize }} en proceso · datos de muestra, no
-reales{% endblock %}
-
 {% load static %}
 
-{% block extra_style %}
-{{ block.super }}
-<link rel="stylesheet" href="{% static 'myapp/css/candidato.css' %}">
-{% endblock %}
+{% block title %}Candidatos — ITR Control Central{% endblock %}
+{% block panel_tag %}GESTIÓN DE CANDIDATOS{% endblock %}
+{% block topbar_title %}Administración{% endblock %}
+{% block user_meta %}Gestión de postulantes{% endblock %}
 
 {% block content %}
+<section class="page-hero" aria-labelledby="hero-title">
+    <div class="hero-copy">
+        <div class="eyebrow"><span>///</span> GESTIÓN DE CANDIDATOS</div>
+        <h1 id="hero-title">Fichero de postulantes</h1>
+        <p>{{ candidatos|length }} candidato{{ candidatos|length|pluralize }} en proceso · datos de muestra, no reales</p>
+        <button class="primary-button" onclick="location.href='{% url 'nuevo_candidato' %}'">Nuevo candidato</button>
+    </div>
+    <div class="hero-illustration" aria-hidden="true"></div>
+</section>
+
 {% if candidatos %}
-<div class="grid">
-    {% for c in candidatos %}
-    <article class="ficha" style="--i: {{ forloop.counter0 }}">
-        <div class="ficha-top">
-            <div>
-                <div class="ficha-nombre">{{ c.nombre }} {{ c.apellidos }}</div>
-                <div class="ficha-dni">DNI {{ c.dni }}</div>
-            </div>
-            {% if c.tipo_deseado %}
-            <span class="sello-badge {% cycle 'azul' 'rojo' 'verde' %}">{{ c.tipo_deseado }}</span>
-            {% endif %}
-        </div>
-        <dl class="ficha-datos">
-            {% if c.curriculum %}<dt>CV</dt>
-            <dd>{{ c.curriculum }}</dd>{% endif %}
-            <dt>Legajo</dt>
-            <dd>#{{ c.id }}</dd>
-        </dl>
-        <a class="button-link" href="{% url 'detalle_candidato' c.id %}">Ver ficha →</a>
-        <a class="button-link" href="{% url 'editar_candidato' c.id %}">Editar →</a>
-    </article>
-    {% endfor %}
+<div class="management-summary">
+    <div><span>TOTAL REGISTRADOS</span><strong>{{ candidatos|length }}</strong></div>
+    <div><span>PENDIENTES ENTREVISTA</span><strong>{% widthratio candidatos|length 2 1 %}</strong></div>
+    <div><span>CON ENTREVISTA</span><strong>{% widthratio candidatos|length 2 1 %}</strong></div>
 </div>
+
+<section class="panel table-panel">
+    <div class="table-toolbar">
+        <form method="GET" class="search-box" style="flex: 1;">
+            <span aria-hidden="true">🔍</span>
+            <input type="search" name="q" placeholder="Buscar por nombre, DNI o materia..." value="{{ request.GET.q|default:'' }}">
+        </form>
+        <form method="GET" style="display: flex; gap: 8px; align-items: center;">
+            <select name="tipo_deseado" class="form-select" style="width: auto; min-width: 180px;">
+                <option value="">Todos los tipos</option>
+                <option value="TUTOR" {% if request.GET.tipo_deseado == 'TUTOR' %}selected{% endif %}>Tutor</option>
+                <option value="ESPECIALISTA" {% if request.GET.tipo_deseado == 'ESPECIALISTA' %}selected{% endif %}>Especialista</option>
+                <option value="AMBOS" {% if request.GET.tipo_deseado == 'AMBOS' %}selected{% endif %}>Ambos</option>
+            </select>
+            <button type="submit" class="filter-button">Filtrar</button>
+        </form>
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>CANDIDATO</th>
+                    <th>DNI</th>
+                    <th>TIPO DESEADO</th>
+                    <th>MATERIAS</th>
+                    <th>LEGAJO</th>
+                    <th>ACCIONES</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in candidatos %}
+                <tr>
+                    <td>
+                        <span class="table-avatar">{{ c.nombre|first }}{{ c.apellidos|first }}</span>
+                        <strong>{{ c.nombre }} {{ c.apellidos }}</strong>
+                    </td>
+                    <td>{{ c.dni }}</td>
+                    <td>
+                        <span class="status {% if c.tipo_deseado == 'TUTOR' %}warning{% elif c.tipo_deseado == 'ESPECIALISTA' %}{% else %}{% endif %}">
+                            {{ c.tipo_deseado }}
+                        </span>
+                    </td>
+                    <td>
+                        {% for m in c.materias %}
+                            <span class="status" style="font-size: 7px; margin-right: 4px; background: var(--paper); color: var(--ink);">#{{ m }}</span>
+                        {% empty %}
+                            <span style="color: var(--muted); font-size: 9px;">—</span>
+                        {% endfor %}
+                    </td>
+                    <td>#{{ c.id }}</td>
+                    <td>
+                        <a href="{% url 'detalle_candidato' c.id %}" class="btn btn-sm">Ver</a>
+                        <a href="{% url 'editar_candidato' c.id %}" class="btn btn-sm">Editar</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="pagination">
+        <span>Mostrando 1–{{ candidatos|length }} de {{ candidatos|length }}</span>
+        <div><button disabled>←</button><button class="active">1</button><button disabled>→</button></div>
+    </div>
+</section>
 {% else %}
-<p class="vacio">Ninguna ficha coincide con este filtro. Todavía no hay candidatos cargados.</p>
+<section class="panel" style="text-align: center; padding: 60px 20px;">
+    <div class="empty-illustration">
+        <span>👥</span>
+        <div>
+            <strong>Sin candidatos</strong>
+            <p>Todavía no hay postulantes cargados.</p>
+        </div>
+    </div>
+    <a href="{% url 'nuevo_candidato' %}" class="primary-button" style="margin-top: 16px; display: inline-flex;">Nuevo candidato</a>
+</section>
 {% endif %}
-<a class="link-alta" href="{% url 'nuevo_candidato' %}">← Cargar otro candidato</a>
 {% endblock %}
