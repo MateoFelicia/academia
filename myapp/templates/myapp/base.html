@@ -80,6 +80,7 @@
             </div>
         </aside>
 
+<<<<<<< HEAD
         <div class="app-main">
             <header class="topbar">
                 <button class="mobile-menu" id="mobileMenu" aria-label="Abrir navegación">☰</button>
@@ -153,5 +154,36 @@
     }
     </script>
     {% block extra_script %}{% endblock %}
+=======
+    <header class="top">
+        <h1>{% block heading %}Archivo académico{% endblock %}</h1>
+        <p class="subtitle">{% block subtitle %}{% endblock %}</p>
+        <nav class="tabs">
+            <a href="{% url 'index' %}" {% if active_tab == 'index' %}class="active" {% endif %}>Portada</a>
+            <a href="{% url 'login' %}" {% if active_tab == 'login' %}class="active" {% endif %}>Iniciar sesion</a>
+            <a href="{% url 'candidatos' %}" {% if active_tab == 'candidatos' %}class="active" {% endif %}>Candidatos</a>
+            <a href="{% url 'nuevo_candidato' %}" {% if active_tab == 'candidatos' %}class="active" {% endif %}>Candidato nuevo</a>
+            <a href="{% url 'comite' %}" {% if active_tab == 'comite' %}class="active" {% endif %}>Comités</a>
+            <a href="{% url 'alumnos' %}" {% if active_tab == 'alumnos' %}class="active" {% endif %}>Alumnos</a>
+            <a href="{% url 'nuevo_alumno' %}" {% if active_tab == 'nuevo_alumno' %}class="active" {% endif %}>Alumno nuevo</a>
+            <a href="{% url 'modificar_alumno' %}" {% if active_tab == 'modificar_alumno' %}class="active" {% endif %}>Modificar Alumno</a>
+            <a href="{% url 'eliminar_alumno' %}"  {% if active_tab == 'eliminar_alumno' %}class="active" {% endif %}>Eliminar Alumno</a>
+            <a href="{% url 'profesores' %}" {% if active_tab == 'profesores' %}class="active" {% endif %}>Profesores</a>
+            <a href="{% url 'nuevo_profesor' %}" {% if active_tab == 'nuevo_profesor' %}class="active" {% endif %}>Profesor nuevo</a>
+            <a href="{% url 'modificar_profesor' %}" {% if active_tab == 'modificar_profesor' %}class="active" {% endif %}>Modificar Profesor</a>
+            <a href="{% url 'eliminar_profesor' %}" {% if active_tab == 'eliminar_profesor' %}class="active" {% endif %}>Eliminar Profesor</a>
+        </nav>
+        {% if request.session.usuario_nombre %}
+            <p class="sesion-info">
+                Sesión: {{ request.session.usuario_nombre }}
+                (<a href="{% url 'logout' %}" class="sesion-salir">Salir</a>)
+            </p>
+        {% endif %}
+    </header>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+>>>>>>> f429e1c57b2938c5446a8d417ea4c5f27c417e0d
 </body>
 </html>

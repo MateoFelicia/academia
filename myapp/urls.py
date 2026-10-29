@@ -5,9 +5,6 @@ from . import views
 urlpatterns = [
     path("", views.index, name="index"),
     path("index/", views.index, name="index_path"),
-    path("login/", views.login_view, name="login"),
-    path("logout/", views.logout_view, name="logout"),
-    path("usuario/nuevo/", views.nuevo_usuario, name="nuevo_usuario"),
     path('candidatos/', views.candidatos, name='candidatos'),
     path("candidatos/nuevo/", views.nuevo_candidato, name="nuevo_candidato"),
     path("candidatos/<int:pk>/editar/", views.editar_candidato, name="editar_candidato"),
@@ -22,5 +19,11 @@ urlpatterns = [
     path("profesores/nuevo/", views.nuevo_profesor, name="nuevo_profesor"),
     path("profesores/modificar/", views.modificar_profesor, name="modificar_profesor"),
     path("profesores/eliminar/", views.eliminar_profesor, name="eliminar_profesor"),
+<<<<<<< HEAD
     path("set-role/", views.set_role, name="set_role"),
+=======
+    path("login/", views.login_view, name="login"),
+    path("logout/", views.logout_view, name="logout"),
+    path("usuario/nuevo/", views.nuevo_usuario, name="nuevo_usuario")
+>>>>>>> f429e1c57b2938c5446a8d417ea4c5f27c417e0d
 ]
