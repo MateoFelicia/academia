@@ -80,81 +80,6 @@
             </div>
         </aside>
 
-<<<<<<< HEAD
-        <div class="app-main">
-            <header class="topbar">
-                <button class="mobile-menu" id="mobileMenu" aria-label="Abrir navegación">☰</button>
-                <div class="topbar-label">
-                    <span>ITR CONTROL CENTRAL</span>
-                    <strong>{% block topbar_title %}Administración{% endblock %}</strong>
-                </div>
-                <div class="top-actions">
-                    <button class="icon-button" aria-label="Notificaciones">🔔<i></i></button>
-                    {% if request.session.usuario_nombre %}
-                    <div class="user-chip">
-                        <div class="avatar">{{ request.session.usuario_nombre|first }}{{ request.session.usuario_apellidos|first|default:'' }}</div>
-                        <div><strong>{{ request.session.usuario_nombre }}</strong><small>{% block user_meta %}{% endblock %}</small></div>
-                        <span class="chevron">⌄</span>
-                    </div>
-                    {% endif %}
-                </div>
-            </header>
-
-            <main class="content">
-                {% if messages %}
-                <ul class="messages">
-                    {% for message in messages %}
-                    <li class="{{ message.tags }}">{{ message }}</li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
-
-                <div class="role-switch" aria-label="Cambiar vista">
-                    <button class="{% if request.session.rol == 'admin' or not request.session.rol %}active{% endif %}" onclick="setRole('admin')">Administración</button>
-                    <button class="{% if request.session.rol == 'profesor' %}active{% endif %}" onclick="setRole('profesor')">Profesores</button>
-                    <button class="{% if request.session.rol == 'alumno' %}active{% endif %}" onclick="setRole('alumno')">Alumnos</button>
-                </div>
-
-                {% block content %}{% endblock %}
-
-                <footer>
-                    <span>ITR CONTROL CENTRAL · SISTEMA ACADÉMICO</span>
-                    <span>VERSIÓN 2.5.1 / TODO OPERATIVO</span>
-                </footer>
-            </main>
-        </div>
-
-        <button class="nav-scrim" id="navScrim" aria-label="Cerrar navegación"></button>
-    </div>
-
-    <script>
-    const sidebar = document.getElementById('sidebar');
-    const navScrim = document.getElementById('navScrim');
-    const mobileMenu = document.getElementById('mobileMenu');
-
-    mobileMenu?.addEventListener('click', () => {
-        sidebar.classList.add('open');
-        navScrim.classList.add('open');
-    });
-    navScrim?.addEventListener('click', () => {
-        sidebar.classList.remove('open');
-        navScrim.classList.remove('open');
-    });
-
-    function setRole(role) {
-        fetch('/set-role/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': getCookie('csrftoken') },
-            body: 'rol=' + role
-        }).then(() => location.reload());
-    }
-    function getCookie(name) {
-        let v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
-        return v ? v[2] : null;
-    }
-    </script>
-    {% block extra_script %}{% endblock %}
-=======
     <header class="top">
         <h1>{% block heading %}Archivo académico{% endblock %}</h1>
         <p class="subtitle">{% block subtitle %}{% endblock %}</p>
@@ -184,6 +109,5 @@
         {% block content %}{% endblock %}
     </main>
 
->>>>>>> f429e1c57b2938c5446a8d417ea4c5f27c417e0d
 </body>
 </html>

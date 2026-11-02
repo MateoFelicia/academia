@@ -100,7 +100,7 @@ def index(request):
         "active_tab": "index"
     })
 
-
+@requerir_rol('ADMIN', 'COMITE')
 def candidatos(request):
     form = BuscarCandidatoForm(request.GET or None)
     q = tipo_deseado = ""
@@ -164,7 +164,7 @@ def editar_candidato(request, pk):
         "active_tab": "candidatos",
     })
 
-
+@requerir_rol('ADMIN', 'COMITE')
 def detalle_candidato(request, pk):
     candidato = datos.obtener_candidato(pk)
     if not candidato:
@@ -253,7 +253,7 @@ def detalle_candidato(request, pk):
         "active_tab": "candidatos",
     })
 
-
+@requerir_rol('ADMIN','COMITE','PROFESOR')
 def comite(request):
     """
     Lista los comités existentes y permite agregar uno nuevo
@@ -310,8 +310,7 @@ def nuevo_comite(request):
     """
     return comite(request)
 
-
-
+@requerir_rol('ADMIN','PROFESOR','ALUMNO')
 def alumnos(request):
     try:
         with connection.cursor() as cursor:
@@ -439,6 +438,7 @@ def eliminar_alumno(request):
         "active_tab": "alumnos",
     })
 
+@requerir_rol('ADMIN','COMITE','PROFESOR')
 def profesores(request):
     try:
         lista = comites.listar_profesores()
@@ -477,7 +477,7 @@ def nuevo_profesor(request):
         "active_tab": "nuevo_profesor",
     })
 
-@requerir_rol('ADMIN')
+@requerir_rol('ADMIN','PROFESOR')
 def modificar_profesor(request):
     profesor = None
     form_buscar = BuscarDNIForm(request.GET or None)
