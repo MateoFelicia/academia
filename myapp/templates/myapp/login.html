@@ -38,7 +38,7 @@
             {% csrf_token %}
 
             <div class="form-group">
-                <label for="{{ form.dni.id_for_label }}">DNI</label>
+                <label for="{{ form.dni.id_for_label }}">DNI o nombre de usuario</label>
                 {{ form.dni }}
                 {% if form.dni.errors %}<div class="alert alert-danger">{{ form.dni.errors }}</div>{% endif %}
             </div>

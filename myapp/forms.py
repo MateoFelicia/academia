@@ -19,8 +19,8 @@ DISPOSICION_CHOICES = [
 ]
 
 class LoginForm(forms.Form):
-    dni = forms.CharField(label="DNI", max_length=20, widget=forms.TextInput(attrs={
-        "placeholder": "DNI de usuario",
+    dni = forms.CharField(label="DNI o nombre de usuario", max_length=50, widget=forms.TextInput(attrs={
+        "placeholder": "DNI o nombre de usuario",
         "autofocus": True,
     }))
     password = forms.CharField(label="Contraseña", widget=forms.PasswordInput(attrs={
@@ -162,3 +162,37 @@ class ProfesorForm(forms.Form):
         ("ESPECIALISTA", "Especialista"),
         ("AMBOS", "Ambos"),
     ])
+
+
+class PermisosForm(forms.Form):
+    """Selector de alcance por cada permiso de los roles editables."""
+    RECURSOS = ("usuario", "alumno", "profesor", "comite", "candidato")
+    ACCIONES = ("ver", "crear", "editar", "eliminar")
+    ROLES = ("COMITE", "PROFESOR", "ALUMNO")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for rol in self.ROLES:
+            for recurso in self.RECURSOS:
+                for accion in self.ACCIONES:
+                    choices = [("", "Ninguno"), ("todos", "Todos")]
+                    if recurso in ("alumno", "profesor"):
+                        choices.insert(1, ("propio", "Propio"))
+                    self.fields[f"{rol}_{recurso}_{accion}"] = forms.ChoiceField(
+                        choices=choices, required=False,
+                        label=f"{rol} · {recurso} · {accion}",
+                    )
+
+    def clean(self):
+        cleaned = super().clean()
+        allowed = {"", "todos", "propio"}
+        for rol in self.ROLES:
+            for recurso in self.RECURSOS:
+                for accion in self.ACCIONES:
+                    key = f"{rol}_{recurso}_{accion}"
+                    valor = cleaned.get(key)
+                    if valor not in allowed:
+                        self.add_error(key, "Alcance desconocido.")
+                    elif valor == "propio" and recurso not in ("alumno", "profesor"):
+                        self.add_error(key, "El alcance propio solo aplica a alumnos y profesores.")
+        return cleaned

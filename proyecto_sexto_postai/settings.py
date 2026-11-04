@@ -51,6 +51,10 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# El esquema local de esta aplicación no incluye django_session. Las sesiones
+# firmadas permiten iniciar sesión sin crear tablas ajenas a la migración SQL.
+SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
+
 ROOT_URLCONF = 'proyecto_sexto_postai.urls'
 
 TEMPLATES = [
@@ -63,6 +67,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'myapp.permisos.permisos_menu',
             ],
         },
     },

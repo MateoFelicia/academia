@@ -5,26 +5,14 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.hashers import check_password, make_password
 from .forms import *
 from functools import wraps
+from django.core.paginator import Paginator
+from django.db import transaction
+from django.utils import timezone
+from .permisos import requiere_permiso, requiere_login, permiso, normalizar_rol, ROLES_EDITABLES
 
 from . import datos_candidatos as datos
 from . import datos_comite as comites
 from .datos_candidatos import SinComiteError
-
-def requerir_rol(*roles_permitidos):
-    def decorador(vista):
-        @wraps(vista)
-        def envoltura(request, *args, **kwargs):
-            nivel = request.session.get('nivel')
-            if nivel is None:
-                messages.warning(request, "Iniciá sesión.")
-                return redirect("login")
-            if nivel not in roles_permitidos:
-                messages.warning(request, "No tenés permisos para esta página.")
-                return redirect("inicio")
-            return vista(request, *args, **kwargs)
-        return envoltura
-    return decorador
-
 
 def login_view(request):
     if request.method == "POST":
@@ -36,15 +24,22 @@ def login_view(request):
 
             with connection.cursor() as cursor:
                 cursor.execute(
-                    "SELECT dni, nombre, password FROM usuario WHERE dni = %s",
+                    """SELECT u.username, u.password_hash, u.nivel,
+                              COALESCE(a.dni, p.dni, u.username),
+                              COALESCE(a.nombre, p.nombre, u.username)
+                       FROM usuarios u
+                       LEFT JOIN alumno a ON a.id = u.id_alumno
+                       LEFT JOIN profesor p ON p.id = u.id_profesor
+                       WHERE u.username = %s AND u.activo = 1""",
                     [dni]
                 )
                 usuario = cursor.fetchone()
 
-            if usuario and check_password(password, usuario[2]):
-                request.session["usuario_dni"] = usuario[0]
-                request.session["usuario_nombre"] = usuario[1]
-                messages.success(request, f"Bienvenido, {usuario[1]}.")
+            if usuario and check_password(password, usuario[1]):
+                request.session["usuario_dni"] = usuario[3]
+                request.session["usuario_nombre"] = usuario[4]
+                request.session["nivel"] = normalizar_rol(usuario[2])
+                messages.success(request, f"Bienvenido, {usuario[4]}.")
                 return redirect("index")
             else:
                 messages.error(request, "DNI o contraseña incorrectos.")
@@ -56,14 +51,17 @@ def login_view(request):
     })
 
 
+@requiere_login
 def logout_view(request):
     if "usuario_dni" in request.session:
         del request.session["usuario_dni"]
         del request.session["usuario_nombre"]
+        request.session.pop("nivel", None)
     messages.success(request, "Sesión cerrada correctamente.")
     return redirect("login")
 
 
+@requiere_permiso('usuario', 'crear')
 def nuevo_usuario(request):
     if request.method == "POST":
         form = LoginForm(request.POST)
@@ -79,9 +77,9 @@ def nuevo_usuario(request):
                 with connection.cursor() as cursor:
                     try:
                         cursor.execute(
-                            """INSERT INTO usuario (dni, nombre, password)
+                            """INSERT INTO usuarios (username, password_hash, nivel)
                             VALUES (%s, %s, %s)""",
-                            [dni, nombre, make_password(password)]
+                            [dni, make_password(password), "ALUMNO"]
                         )
                         messages.success(request, f"Usuario {dni} creado correctamente.")
                         return redirect("index")
@@ -95,12 +93,27 @@ def nuevo_usuario(request):
     })
 
 
+@requiere_login
 def index(request):
-    return render(request, "myapp/index.html", {
-        "active_tab": "index"
-    })
+    resumen = {}
+    rol = normalizar_rol(request.session.get("nivel"))
+    dni = request.session.get("usuario_dni")
+    if rol == "ALUMNO":
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT id FROM alumno WHERE dni = %s", [dni])
+            alumno = cursor.fetchone()
+            if alumno:
+                cursor.execute("SELECT COUNT(*) FROM ficha_individual WHERE id_alumno = %s", [alumno[0]])
+                resumen["fichas"] = cursor.fetchone()[0]
+                cursor.execute("SELECT COUNT(*) FROM registro_asistencia ra JOIN ficha_individual fi ON fi.id = ra.id_ficha WHERE fi.id_alumno = %s", [alumno[0]])
+                resumen["registros_asistencia"] = cursor.fetchone()[0]
+    elif rol == "PROFESOR":
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT COUNT(*) FROM hoja_actividad ha JOIN profesor p ON p.id = ha.id_profesor WHERE p.dni = %s", [dni])
+            resumen["actividades"] = cursor.fetchone()[0]
+    return render(request, "myapp/index.html", {"active_tab": "index", "resumen": resumen, "rol": rol})
 
-
+@requiere_permiso('candidato', 'ver')
 def candidatos(request):
     form = BuscarCandidatoForm(request.GET or None)
     q = tipo_deseado = ""
@@ -113,9 +126,11 @@ def candidatos(request):
         "candidatos": datos.listar_candidatos(q, tipo_deseado),
         "form_buscar": form,
         "active_tab": "candidatos",
+        "puede_crear": permiso(request.session.get("nivel"), "candidato", "crear") is not None,
+        "puede_editar": permiso(request.session.get("nivel"), "candidato", "editar") is not None,
     })
 
-@requerir_rol('ADMIN')
+@requiere_permiso('candidato', 'crear')
 def nuevo_candidato(request):
     guardado = False
 
@@ -136,7 +151,7 @@ def nuevo_candidato(request):
         "active_tab": "candidatos",
     })
 
-@requerir_rol('ADMIN')
+@requiere_permiso('candidato', 'editar')
 def editar_candidato(request, pk):
     candidato = datos.obtener_candidato(pk)
     if not candidato:
@@ -164,7 +179,7 @@ def editar_candidato(request, pk):
         "active_tab": "candidatos",
     })
 
-
+@requiere_permiso('candidato', 'ver')
 def detalle_candidato(request, pk):
     candidato = datos.obtener_candidato(pk)
     if not candidato:
@@ -253,7 +268,7 @@ def detalle_candidato(request, pk):
         "active_tab": "candidatos",
     })
 
-
+@requiere_permiso('comite', 'ver')
 def comite(request):
     """
     Lista los comités existentes y permite agregar uno nuevo
@@ -261,6 +276,9 @@ def comite(request):
     """
     guardado = False
 
+    if request.method == "POST" and permiso(request.session.get("nivel"), "comite", "crear") is None:
+        messages.warning(request, "No tenés permisos para esta página")
+        return redirect("index")
     if request.method == "POST":
         form = ComiteForm(request.POST)
 
@@ -299,7 +317,7 @@ def comite(request):
         "active_tab": "comite",
     })
 
-@requerir_rol('ADMIN')
+@requiere_permiso('comite', 'crear')
 def nuevo_comite(request):
     """
     Esta vista ya no es necesaria para el funcionamiento del alta,
@@ -310,18 +328,23 @@ def nuevo_comite(request):
     """
     return comite(request)
 
-
-
+@requiere_permiso('alumno', 'ver')
 def alumnos(request):
     try:
         with connection.cursor() as cursor:
-            cursor.execute("SELECT dni, nombre, apellidos, id_grupo FROM alumno")
+            if request.alcance == "propio":
+                cursor.execute("SELECT dni, nombre, apellidos, id_grupo FROM alumno WHERE dni = %s", [request.session.get("usuario_dni")])
+            else:
+                cursor.execute("SELECT dni, nombre, apellidos, id_grupo FROM alumno")
             columnas = [col[0] for col in cursor.description]
             alumnos = [dict(zip(columnas, fila)) for fila in cursor.fetchall()]
 
         return render(request, "myapp/alumnos.html", {
             "alumnos": alumnos,
             "active_tab": "alumnos",
+            "puede_crear": permiso(request.session.get("nivel"), "alumno", "crear") is not None,
+            "puede_editar": permiso(request.session.get("nivel"), "alumno", "editar") is not None,
+            "puede_eliminar": permiso(request.session.get("nivel"), "alumno", "eliminar") is not None,
         })
     except Exception as e:
         messages.error(request, f"Error al cargar alumnos: {str(e)}")
@@ -329,9 +352,12 @@ def alumnos(request):
     return render(request, "myapp/alumnos.html", {
         "alumnos": [],
         "active_tab": "alumnos",
+        "puede_crear": permiso(request.session.get("nivel"), "alumno", "crear") is not None,
+        "puede_editar": permiso(request.session.get("nivel"), "alumno", "editar") is not None,
+        "puede_eliminar": permiso(request.session.get("nivel"), "alumno", "eliminar") is not None,
     })
 
-@requerir_rol('ADMIN')
+@requiere_permiso('alumno', 'crear')
 def nuevo_alumno(request):
     guardado = False
 
@@ -357,7 +383,7 @@ def nuevo_alumno(request):
         "active_tab": "alumnos",
     })
 
-@requerir_rol('ADMIN')
+@requiere_permiso('alumno', 'editar')
 def modificar_alumno(request):
     alumno = None
     form_buscar = BuscarDNIForm(request.GET or None)
@@ -367,14 +393,16 @@ def modificar_alumno(request):
             nuevo_DNI = request.POST.get("dni")
             nuevo_nombre = request.POST.get("nombre")
             DNI_original = request.POST.get("dni_original")
+            if request.alcance == "propio" and DNI_original != request.session.get("usuario_dni"):
+                raise Http404("Alumno no encontrado")
 
             if nuevo_DNI and nuevo_nombre and DNI_original:
                 with connection.cursor() as cursor:
                     cursor.execute(
                         """UPDATE alumno
                            SET dni = %s, nombre = %s
-                           WHERE dni = %s""",
-                        [nuevo_DNI, nuevo_nombre, DNI_original]
+                           WHERE dni = %s AND (%s = 'todos' OR dni = %s)""",
+                        [nuevo_DNI, nuevo_nombre, DNI_original, request.alcance, request.session.get("usuario_dni")]
                     )
                 messages.success(request, "Alumno actualizado correctamente.")
                 return redirect('alumnos')
@@ -384,6 +412,8 @@ def modificar_alumno(request):
         if "buscar" in request.GET:
             if form_buscar.is_valid():
                 dni = form_buscar.cleaned_data["dni"]
+                if request.alcance == "propio" and dni != request.session.get("usuario_dni"):
+                    raise Http404("Alumno no encontrado")
                 with connection.cursor() as cursor:
                     cursor.execute(
                         "SELECT dni, nombre FROM alumno WHERE dni = %s",
@@ -405,7 +435,7 @@ def modificar_alumno(request):
 
     return render(request, "myapp/modificar_alumno.html", contexto)
 
-@requerir_rol('ADMIN')
+@requiere_permiso('alumno', 'eliminar')
 def eliminar_alumno(request):
     alumno = None
     form_buscar = BuscarDNIForm(request.GET or None)
@@ -413,6 +443,8 @@ def eliminar_alumno(request):
     try:
         if request.method == "POST" and "eliminar" in request.POST:
             dni = request.POST.get("dni")
+            if request.alcance == "propio" and dni != request.session.get("usuario_dni"):
+                raise Http404("Alumno no encontrado")
             if dni:
                 with connection.cursor() as cursor:
                     cursor.execute("DELETE FROM alumno WHERE dni = %s", [dni])
@@ -424,6 +456,8 @@ def eliminar_alumno(request):
         if "buscar" in request.GET:
             if form_buscar.is_valid():
                 dni = form_buscar.cleaned_data["dni"]
+                if request.alcance == "propio" and dni != request.session.get("usuario_dni"):
+                    raise Http404("Alumno no encontrado")
                 with connection.cursor() as cursor:
                     cursor.execute("SELECT dni, nombre FROM alumno WHERE dni = %s", [dni])
                     alumno = cursor.fetchone()
@@ -439,9 +473,12 @@ def eliminar_alumno(request):
         "active_tab": "alumnos",
     })
 
+@requiere_permiso('profesor', 'ver')
 def profesores(request):
     try:
         lista = comites.listar_profesores()
+        if request.alcance == "propio":
+            lista = [p for p in lista if p.dni == request.session.get("usuario_dni")]
     except Exception as e:
         messages.error(request, f"Error al cargar profesores: {str(e)}")
         lista = []
@@ -449,9 +486,12 @@ def profesores(request):
     return render(request, "myapp/profesores.html", {
         "profesores": lista,
         "active_tab": "profesores",
+        "puede_crear": permiso(request.session.get("nivel"), "profesor", "crear") is not None,
+        "puede_editar": permiso(request.session.get("nivel"), "profesor", "editar") is not None,
+        "puede_eliminar": permiso(request.session.get("nivel"), "profesor", "eliminar") is not None,
     })
 
-@requerir_rol('ADMIN')
+@requiere_permiso('profesor', 'crear')
 def nuevo_profesor(request):
     guardado = False
 
@@ -477,7 +517,7 @@ def nuevo_profesor(request):
         "active_tab": "nuevo_profesor",
     })
 
-@requerir_rol('ADMIN')
+@requiere_permiso('profesor', 'editar')
 def modificar_profesor(request):
     profesor = None
     form_buscar = BuscarDNIForm(request.GET or None)
@@ -487,14 +527,16 @@ def modificar_profesor(request):
             nuevo_DNI = request.POST.get("dni")
             nuevo_nombre = request.POST.get("nombre")
             DNI_original = request.POST.get("dni_original")
+            if request.alcance == "propio" and DNI_original != request.session.get("usuario_dni"):
+                raise Http404("Profesor no encontrado")
 
             if nuevo_DNI and nuevo_nombre and DNI_original:
                 with connection.cursor() as cursor:
                     cursor.execute(
                         """UPDATE profesor
                            SET dni = %s, nombre = %s
-                           WHERE dni = %s""",
-                        [nuevo_DNI, nuevo_nombre, DNI_original]
+                           WHERE dni = %s AND (%s = 'todos' OR dni = %s)""",
+                        [nuevo_DNI, nuevo_nombre, DNI_original, request.alcance, request.session.get("usuario_dni")]
                     )
                 messages.success(request, "Profesor actualizado correctamente.")
                 return redirect('profesores')
@@ -504,6 +546,8 @@ def modificar_profesor(request):
         if "buscar" in request.GET:
             if form_buscar.is_valid():
                 dni = form_buscar.cleaned_data["dni"]
+                if request.alcance == "propio" and dni != request.session.get("usuario_dni"):
+                    raise Http404("Profesor no encontrado")
                 with connection.cursor() as cursor:
                     cursor.execute(
                         "SELECT dni, nombre FROM profesor WHERE dni = %s",
@@ -525,7 +569,7 @@ def modificar_profesor(request):
 
     return render(request, "myapp/modificar_profesor.html", contexto)
 
-@requerir_rol('ADMIN')
+@requiere_permiso('profesor', 'eliminar')
 def eliminar_profesor(request):
     profesor = None
     form_buscar = BuscarDNIForm(request.GET or None)
@@ -533,6 +577,8 @@ def eliminar_profesor(request):
     try:
         if request.method == "POST" and "eliminar" in request.POST:
             dni = request.POST.get("dni")
+            if request.alcance == "propio" and dni != request.session.get("usuario_dni"):
+                raise Http404("Profesor no encontrado")
             if dni:
                 with connection.cursor() as cursor:
                     cursor.execute("DELETE FROM profesor WHERE dni = %s", [dni])
@@ -544,6 +590,8 @@ def eliminar_profesor(request):
         if "buscar" in request.GET:
             if form_buscar.is_valid():
                 dni = form_buscar.cleaned_data["dni"]
+                if request.alcance == "propio" and dni != request.session.get("usuario_dni"):
+                    raise Http404("Profesor no encontrado")
                 with connection.cursor() as cursor:
                     cursor.execute("SELECT dni, nombre FROM profesor WHERE dni = %s", [dni])
                     profesor = cursor.fetchone()
@@ -561,8 +609,61 @@ def eliminar_profesor(request):
 
 
 def set_role(request):
-    if request.method == "POST":
-        role = request.POST.get("rol", "admin")
-        if role in ("admin", "profesor", "alumno"):
-            request.session["rol"] = role
     return redirect("index")
+
+
+def _solo_admin(request):
+    if not request.session.get("usuario_dni"):
+        messages.warning(request, "Iniciá sesión.")
+        return redirect("login")
+    if normalizar_rol(request.session.get("nivel")) != "ADMIN":
+        messages.warning(request, "No tenés permisos para esta página")
+        return redirect("index")
+    return None
+
+
+@requiere_permiso("panel_permisos", "ver")
+def panel_permisos(request):
+    from .forms import PermisosForm
+    from .permisos import RECURSOS, ACCIONES
+    denegado = _solo_admin(request)
+    if denegado:
+        return denegado
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT rol, recurso, accion, alcance FROM permisos WHERE rol IN (%s, %s, %s)", list(ROLES_EDITABLES))
+        actual = {(r, rec, acc): alc for r, rec, acc, alc in cursor.fetchall()}
+    initial = {f"{r}_{rec}_{acc}": actual.get((r, rec, acc), "") for r in ROLES_EDITABLES for rec in RECURSOS for acc in ACCIONES}
+    form = PermisosForm(request.POST or None, initial=initial)
+    if request.method == "POST" and form.is_valid():
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                for rol in ROLES_EDITABLES:
+                    for recurso in RECURSOS:
+                        for accion in ACCIONES:
+                            nuevo = form.cleaned_data[f"{rol}_{recurso}_{accion}"] or None
+                            anterior = actual.get((rol, recurso, accion))
+                            if nuevo == anterior:
+                                continue
+                            if nuevo is None:
+                                cursor.execute("DELETE FROM permisos WHERE rol = %s AND recurso = %s AND accion = %s", [rol, recurso, accion])
+                            elif anterior is None:
+                                cursor.execute("INSERT INTO permisos (rol, recurso, accion, alcance) VALUES (%s, %s, %s, %s)", [rol, recurso, accion, nuevo])
+                            else:
+                                cursor.execute("UPDATE permisos SET alcance = %s WHERE rol = %s AND recurso = %s AND accion = %s", [nuevo, rol, recurso, accion])
+                            cursor.execute("INSERT INTO permisos_log (fecha, admin_dni, admin_nombre, rol, recurso, accion, valor_anterior, valor_nuevo) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)", [timezone.now(), request.session.get("usuario_dni"), request.session.get("usuario_nombre", ""), rol, recurso, accion, anterior, nuevo])
+        messages.success(request, "Permisos actualizados.")
+        return redirect("panel_permisos")
+    filas = [{"recurso": r, "accion": a, "celdas": [form[f"{rol}_{r}_{a}"] for rol in ROLES_EDITABLES]} for r in RECURSOS for a in ACCIONES]
+    return render(request, "myapp/panel_permisos.html", {"form": form, "filas": filas, "roles": ROLES_EDITABLES, "active_tab": "panel_permisos"})
+
+
+@requiere_permiso("panel_permisos", "ver")
+def permisos_log(request):
+    denegado = _solo_admin(request)
+    if denegado:
+        return denegado
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT id, fecha, admin_dni, admin_nombre, rol, recurso, accion, valor_anterior, valor_nuevo FROM permisos_log ORDER BY fecha DESC, id DESC")
+        registros = [dict(zip([col[0] for col in cursor.description], fila)) for fila in cursor.fetchall()]
+    pagina = Paginator(registros, 25).get_page(request.GET.get("page"))
+    return render(request, "myapp/permisos_log.html", {"pagina": pagina, "active_tab": "permisos_log"})

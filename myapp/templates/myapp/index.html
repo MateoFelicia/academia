@@ -6,6 +6,17 @@
 {% block topbar_title %}Administración{% endblock %}
 
 {% block content %}
+{% if rol == "ALUMNO" or rol == "PROFESOR" %}
+<section class="page-hero"><div class="hero-copy"><div class="eyebrow"><span>///</span> MI ESPACIO</div><h1>Resumen personal</h1><p>Información vinculada a tu registro en el instituto.</p></div></section>
+<div class="stats-grid">
+    {% if rol == "ALUMNO" %}
+    <article class="stat-card red"><span class="stat-label">FICHAS INDIVIDUALES</span><strong class="stat-value">{{ resumen.fichas|default:0 }}</strong></article>
+    <article class="stat-card"><span class="stat-label">REGISTROS DE ASISTENCIA</span><strong class="stat-value">{{ resumen.registros_asistencia|default:0 }}</strong></article>
+    {% else %}
+    <article class="stat-card red"><span class="stat-label">ACTIVIDADES REGISTRADAS</span><strong class="stat-value">{{ resumen.actividades|default:0 }}</strong></article>
+    {% endif %}
+</div>
+{% elif rol == "ADMIN" %}
 <section class="page-hero" aria-labelledby="hero-title">
     <div class="hero-copy">
         <div class="eyebrow"><span>///</span> PANEL CENTRAL</div>
@@ -104,4 +115,7 @@
         </div>
     </section>
 </div>
+{% else %}
+<section class="panel"><div class="section-title"><div><span>MI ESPACIO</span><h2>Resumen personal</h2></div></div><p>No hay un resumen individual disponible para este rol con los datos registrados.</p></section>
+{% endif %}
 {% endblock %}

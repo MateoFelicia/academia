@@ -1,0 +1,12 @@
+{% extends "myapp/base.html" %}
+{% block title %}Historial de permisos{% endblock %}
+{% block heading %}Historial de permisos{% endblock %}
+{% block subtitle %}Cambios registrados por administración{% endblock %}
+{% block content %}
+<section class="panel">
+  <div class="section-title"><div><span>ADMINISTRACIÓN</span><h2>Historial</h2></div></div>
+  <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Administrador</th><th>Rol</th><th>Recurso</th><th>Acción</th><th>Anterior</th><th>Nuevo</th></tr></thead>
+  <tbody>{% for r in pagina %}<tr><td>{{ r.fecha }}</td><td>{{ r.admin_dni }} · {{ r.admin_nombre }}</td><td>{{ r.rol }}</td><td>{{ r.recurso }}</td><td>{{ r.accion }}</td><td>{{ r.valor_anterior|default:"—" }}</td><td>{{ r.valor_nuevo|default:"—" }}</td></tr>{% empty %}<tr><td colspan="7">Sin cambios registrados.</td></tr>{% endfor %}</tbody></table></div>
+  <nav>{% if pagina.has_previous %}<a href="?page={{ pagina.previous_page_number }}">Anterior</a>{% endif %} Página {{ pagina.number }} de {{ pagina.paginator.num_pages }} {% if pagina.has_next %}<a href="?page={{ pagina.next_page_number }}">Siguiente</a>{% endif %}</nav>
+</section>
+{% endblock %}

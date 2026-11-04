@@ -1,4 +1,5 @@
 {% extends "myapp/base.html" %}
+
 {% load static %}
 
 {% block title %}Candidatos — ITR Control Central{% endblock %}
@@ -12,7 +13,7 @@
         <div class="eyebrow"><span>///</span> GESTIÓN DE CANDIDATOS</div>
         <h1 id="hero-title">Fichero de postulantes</h1>
         <p>{{ candidatos|length }} candidato{{ candidatos|length|pluralize }} en proceso · datos de muestra, no reales</p>
-        <button class="primary-button" onclick="location.href='{% url 'nuevo_candidato' %}'">Nuevo candidato</button>
+        {% if puede_crear %}<button class="primary-button" onclick="location.href='{% url 'nuevo_candidato' %}'">Nuevo candidato</button>{% endif %}
     </div>
     <div class="hero-illustration" aria-hidden="true"></div>
 </section>
@@ -75,7 +76,7 @@
                     <td>#{{ c.id }}</td>
                     <td>
                         <a href="{% url 'detalle_candidato' c.id %}" class="btn btn-sm">Ver</a>
-                        <a href="{% url 'editar_candidato' c.id %}" class="btn btn-sm">Editar</a>
+                        {% if puede_editar %}<a href="{% url 'editar_candidato' c.id %}" class="btn btn-sm">Editar</a>{% endif %}
                     </td>
                 </tr>
                 {% endfor %}
@@ -96,7 +97,7 @@
             <p>Todavía no hay postulantes cargados.</p>
         </div>
     </div>
-    <a href="{% url 'nuevo_candidato' %}" class="primary-button" style="margin-top: 16px; display: inline-flex;">Nuevo candidato</a>
+    {% if puede_crear %}<a href="{% url 'nuevo_candidato' %}" class="primary-button" style="margin-top: 16px; display: inline-flex;">Nuevo candidato</a>{% endif %}
 </section>
 {% endif %}
 {% endblock %}
