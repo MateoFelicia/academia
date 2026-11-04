@@ -12,7 +12,7 @@
         <div class="eyebrow"><span>///</span> GESTIÓN DE ALUMNOS</div>
         <h1 id="hero-title">Matrícula vigente</h1>
         <p>{{ alumnos|length }} alumno{{ alumnos|length|pluralize }} inscripto{{ alumnos|length|pluralize }}</p>
-        <button class="primary-button" onclick="location.href='{% url 'nuevo_alumno' %}'">Nuevo alumno</button>
+        {% if puede_crear %}<button class="primary-button" onclick="location.href='{% url 'nuevo_alumno' %}'">Nuevo alumno</button>{% endif %}
     </div>
     <div class="hero-illustration" aria-hidden="true"></div>
 </section>
@@ -31,7 +31,7 @@
             <input type="search" name="q" placeholder="Buscar por nombre, DNI o grupo..." value="{{ request.GET.q|default:'' }}">
         </form>
         <button type="button" class="filter-button">Filtros <span>0</span></button>
-        <a href="{% url 'nuevo_alumno' %}" class="filter-button" style="text-decoration: none; color: inherit; display: flex; align-items: center;">Nuevo alumno</a>
+        {% if puede_crear %}<a href="{% url 'nuevo_alumno' %}" class="filter-button" style="text-decoration: none; color: inherit; display: flex; align-items: center;">Nuevo alumno</a>{% endif %}
     </div>
     <div class="table-wrap">
         <table>
@@ -55,8 +55,8 @@
                     <td><span class="status" style="background: var(--paper); color: var(--ink);">Grupo {{ a.id_grupo }}</span></td>
                     <td>#{{ forloop.counter }}</td>
                     <td>
-                        <a href="{% url 'modificar_alumno' %}?dni={{ a.dni }}" class="btn btn-sm">Modificar</a>
-                        <a href="{% url 'eliminar_alumno' %}?dni={{ a.dni }}" class="btn btn-sm btn-danger">Eliminar</a>
+                        {% if puede_editar %}<a href="{% url 'modificar_alumno' %}?dni={{ a.dni }}" class="btn btn-sm">Modificar</a>{% endif %}
+                        {% if puede_eliminar %}<a href="{% url 'eliminar_alumno' %}?dni={{ a.dni }}" class="btn btn-sm btn-danger">Eliminar</a>{% endif %}
                     </td>
                 </tr>
                 {% endfor %}
@@ -74,7 +74,7 @@
         <span>🎓</span>
         <div><strong>Sin alumnos</strong><p>Todavía no hay matrícula cargada.</p></div>
     </div>
-    <a href="{% url 'nuevo_alumno' %}" class="primary-button" style="margin-top: 16px; display: inline-flex;">Nuevo alumno</a>
+    {% if puede_crear %}<a href="{% url 'nuevo_alumno' %}" class="primary-button" style="margin-top: 16px; display: inline-flex;">Nuevo alumno</a>{% endif %}
 </section>
 {% endif %}
 {% endblock %}

@@ -22,5 +22,7 @@ urlpatterns = [
     path("set-role/", views.set_role, name="set_role"),
     path("login/", views.login_view, name="login"),
     path("logout/", views.logout_view, name="logout"),
-    path("usuario/nuevo/", views.nuevo_usuario, name="nuevo_usuario")
+    path("usuario/nuevo/", views.nuevo_usuario, name="nuevo_usuario"),
+    path("permisos/", views.panel_permisos, name="panel_permisos"),
+    path("permisos/historial/", views.permisos_log, name="permisos_log"),
 ]

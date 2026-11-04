@@ -1,0 +1,18 @@
+{% extends "myapp/base.html" %}
+{% block title %}Permisos{% endblock %}
+{% block heading %}Permisos por rol{% endblock %}
+{% block subtitle %}Configuración de accesos para Comité, Profesor y Alumno{% endblock %}
+{% block content %}
+<section class="panel">
+  <div class="section-title"><div><span>ADMINISTRACIÓN</span><h2>Matriz de permisos</h2></div></div>
+  {% if messages %}{% for message in messages %}<p>{{ message }}</p>{% endfor %}{% endif %}
+  <form method="post">{% csrf_token %}
+    {{ form.non_field_errors }}
+    <div class="table-wrap"><table><thead><tr><th>Recurso</th><th>Acción</th>{% for rol in roles %}<th>{{ rol }}</th>{% endfor %}</tr></thead>
+    <tbody>{% for fila in filas %}<tr><td>{{ fila.recurso }}</td><td>{{ fila.accion }}</td>
+      {% for celda in fila.celdas %}<td>{{ celda }}</td>{% endfor %}
+    </tr>{% endfor %}</tbody></table></div>
+    <button class="primary-button" type="submit">Guardar cambios</button>
+  </form>
+</section>
+{% endblock %}
