@@ -76,6 +76,12 @@
                 {% if 'permisos_log' in permisos %}<a href="{% url 'permisos_log' %}"><span class="nav-icon">🕘</span><span>Historial</span></a>{% endif %}
                 {% if 'cargar_calificacion' in permisos %}<a href="{% url 'cargar_calificacion' %}"><span class="nav-icon">📝</span><span>Cargar notas</span></a>{% endif %}
                 {% if 'cargar_faltas_semanales' in permisos %}<a href="{% url 'cargar_faltas_semanales' %}"><span class="nav-icon">📅</span><span>Faltas semanales</span></a>{% endif %}
+                {% if request.session.usuario_dni %}
+                <form method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button type="submit"><span class="nav-icon">↪</span><span>Cerrar sesión</span></button>
+                </form>
+                {% endif %}
             </nav>
             <div class="sidebar-note">
                 <span>GESTIÓN ACADÉMICA</span>

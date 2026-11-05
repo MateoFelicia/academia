@@ -34,25 +34,13 @@
 
         {% if alumno %}
         <div class="alert alert-success" style="margin-bottom: 24px;">Alumno encontrado: <strong>{{ alumno.nombre }} {{ alumno.apellidos|default:'' }}</strong> (DNI: {{ alumno.dni }})</div>
+        {% if not grupos_disponibles %}<div class="alert alert-warning">No hay grupos disponibles. No se puede guardar la matrícula hasta cargar un grupo.</div>{% endif %}
 
-        <form method="post" style="display: flex; flex-direction: column; gap: 16px; max-width: 400px;">
-            {% csrf_token %}
-            <input type="hidden" name="dni_original" value="{{ alumno.dni }}">
-
-            <div class="form-group">
-                <label for="id_dni">DNI</label>
-                <input type="text" name="dni" id="id_dni" class="form-control" value="{{ alumno.dni }}" required>
-            </div>
-
-            <div class="form-group">
-                <label for="id_nombre">Nombre</label>
-                <input type="text" name="nombre" id="id_nombre" class="form-control" value="{{ alumno.nombre }}" required>
-            </div>
-
-            <div style="display: flex; gap: 12px;">
-                <button type="submit" name="guardar" class="btn btn-primary">Guardar cambios</button>
-                <a href="{% url 'alumnos' %}" class="btn" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">Cancelar</a>
-            </div>
+        <form method="post" style="display: flex; flex-direction: column; gap: 16px; max-width: 500px;">
+            {% csrf_token %}<input type="hidden" name="dni_original" value="{{ alumno.dni }}">
+            {{ form_editar.non_field_errors }}
+            {% for field in form_editar %}<div class="form-group"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.errors %}<div class="alert alert-danger">{{ field.errors }}</div>{% endif %}</div>{% endfor %}
+            <div style="display: flex; gap: 12px;"><button type="submit" name="guardar" class="btn btn-primary">Guardar cambios</button><a href="{% url 'alumnos' %}" class="btn">Cancelar</a></div>
         </form>
         {% endif %}
     </section>

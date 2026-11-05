@@ -17,8 +17,10 @@ PERMISOS_ADMIN = {
     ("profesor", "ver"): "todos", ("profesor", "crear"): "todos",
     ("profesor", "editar"): "todos", ("profesor", "eliminar"): "todos",
     ("comite", "ver"): "todos", ("comite", "crear"): "todos",
+    ("comite", "editar"): "todos", ("comite", "eliminar"): "todos",
     ("candidato", "ver"): "todos", ("candidato", "crear"): "todos",
-    ("candidato", "editar"): "todos", ("panel_permisos", "ver"): "todos",
+    ("candidato", "editar"): "todos", ("candidato", "eliminar"): "todos",
+    ("panel_permisos", "ver"): "todos",
     ("panel_permisos", "editar"): "todos",
 }
 

@@ -1,0 +1,12 @@
+{% extends "myapp/base.html" %}
+{% block title %}Eliminar candidato{% endblock %}
+{% block heading %}Eliminar candidato{% endblock %}
+{% block subtitle %}Confirmá la baja de la ficha seleccionada{% endblock %}
+{% block content %}
+<section class="panel form-preview">
+  <div class="section-title"><div><span>GESTIÓN DE CANDIDATOS</span><h2>Confirmar eliminación</h2></div></div>
+  {% if messages %}<ul class="messages">{% for message in messages %}<li class="{{ message.tags }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
+  <p>¿Eliminar a <strong>{{ candidato.nombre_completo }}</strong> (DNI {{ candidato.dni }})?</p>
+  <form method="post">{% csrf_token %}<button class="btn btn-danger" type="submit">Sí, eliminar</button> <a class="btn" href="{% url 'candidatos' %}">Cancelar</a></form>
+</section>
+{% endblock %}

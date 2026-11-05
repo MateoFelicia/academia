@@ -39,10 +39,32 @@ def _choices_materias():
 
 
 class AlumnoForm(forms.Form):
-    dni = forms.CharField(label="DNI", max_length=15)
-    nombre = forms.CharField(label="Nombre", max_length=60)
-    apellidos = forms.CharField(label="Apellidos", max_length=80)
-    id_grupo = forms.IntegerField(label="ID de grupo")
+    dni = forms.CharField(label="DNI", max_length=20)
+    nombre = forms.CharField(label="Nombre", max_length=255)
+    apellidos = forms.CharField(label="Apellidos", max_length=255)
+    id_grupo = forms.ChoiceField(
+        label="Grupo",
+        error_messages={"required": "Elegí un grupo existente para poder matricular al alumno."},
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from django.db import connection
+
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """SELECT g.id, g.codigo, c.numero_curso, e.nombre
+                   FROM grupo g
+                   JOIN curso c ON c.id = g.id_curso
+                   JOIN especialidad e ON e.id = c.id_especialidad
+                   ORDER BY c.numero_curso, e.nombre, g.codigo"""
+            )
+            self.fields["id_grupo"].choices = [
+                ("", "Elegí un grupo")
+            ] + [
+                (str(id_grupo), f"{numero_curso}° {especialidad} · Grupo {codigo}")
+                for id_grupo, codigo, numero_curso, especialidad in cursor.fetchall()
+            ]
 
 
 class ComiteForm(forms.Form):
@@ -69,9 +91,14 @@ class ComiteForm(forms.Form):
         self.fields["id_presidente"] = forms.ChoiceField(label="Presidente", choices=opciones)
         self.fields["id_secretario"] = forms.ChoiceField(label="Secretario", choices=opciones)
         self.fields["id_vocal"] = forms.ChoiceField(label="Vocal", choices=opciones)
+        self.cantidad_profesores = len(opciones)
 
     def clean(self):
         cleaned = super().clean()
+        if self.cantidad_profesores < 3:
+            raise forms.ValidationError(
+                "Para crear un comité hacen falta al menos tres profesores cargados."
+            )
         roles = ("id_presidente", "id_secretario", "id_vocal")
         elegidos = [cleaned.get(r) for r in roles if cleaned.get(r)]
         if len(elegidos) == 3 and len(set(elegidos)) < 3:
@@ -81,7 +108,7 @@ class ComiteForm(forms.Form):
         return cleaned
 
 class CandidatoForm(forms.Form):
-    dni = forms.CharField(label="DNI", max_length=9)
+    dni = forms.CharField(label="DNI", max_length=20)
     nombre = forms.CharField(label="Nombre", max_length=80)
     apellidos = forms.CharField(label="Apellidos", max_length=80)
     curriculum = forms.CharField(label="Currículum", max_length=255, required=False)
@@ -144,10 +171,10 @@ class EntrevistaForm(forms.Form):
 
 
 class ProfesorForm(forms.Form): 
-    dni = forms.CharField(max_length=10)
+    dni = forms.CharField(label="DNI", max_length=20)
     nombre = forms.CharField(max_length=100)
     apellidos = forms.CharField(max_length=100)
-    domicilio = forms.CharField(max_length=150)
+    domicilio = forms.CharField(max_length=255, required=False)
     nivel_estudios = forms.ChoiceField(choices=[
         ("inicial", "Inicial"),
         ("primario", "Primario"),
