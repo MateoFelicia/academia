@@ -1,4 +1,4 @@
-from django.db import IntegrityError, connection
+from django.db import DatabaseError, IntegrityError, connection
 from django.contrib import messages
 from django.http import Http404
 from django.shortcuts import render, redirect
@@ -8,6 +8,7 @@ from functools import wraps
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.utils import timezone
+from datetime import date
 from .permisos import requiere_permiso, requiere_login, permiso, normalizar_rol, ROLES_EDITABLES
 
 from . import datos_candidatos as datos
@@ -99,14 +100,42 @@ def index(request):
     rol = normalizar_rol(request.session.get("nivel"))
     dni = request.session.get("usuario_dni")
     if rol == "ALUMNO":
+        resumen.update({"registro_alumno": False, "materias": [], "aprobadas": 0, "desaprobadas": 0, "faltas": 0, "semanas_informadas": 0, "datos_academicos_disponibles": False})
         with connection.cursor() as cursor:
             cursor.execute("SELECT id FROM alumno WHERE dni = %s", [dni])
             alumno = cursor.fetchone()
             if alumno:
+                resumen["registro_alumno"] = True
+                resumen.update({"materias": [], "aprobadas": 0, "desaprobadas": 0, "faltas": 0, "semanas_informadas": 0, "datos_academicos_disponibles": False})
+                try:
+                    cursor.execute(
+                        """SELECT asi.nombre, AVG(cal.nota)
+                           FROM calificacion cal
+                           JOIN asignatura asi ON asi.id = cal.id_asignatura
+                           WHERE cal.id_alumno = %s
+                           GROUP BY asi.id, asi.nombre
+                           ORDER BY asi.nombre""",
+                        [alumno[0]],
+                    )
+                    materias = [{"nombre": nombre, "promedio": promedio} for nombre, promedio in cursor.fetchall()]
+                    cursor.execute(
+                        """SELECT COALESCE(SUM(cuartos_falta), 0), COUNT(*)
+                           FROM faltas_semanales WHERE id_alumno = %s""",
+                        [alumno[0]],
+                    )
+                    cuartos_falta, semanas_informadas = cursor.fetchone()
+                    resumen.update({
+                        "materias": materias,
+                        "aprobadas": sum(1 for materia in materias if materia["promedio"] >= 7),
+                        "desaprobadas": sum(1 for materia in materias if materia["promedio"] < 7),
+                        "faltas": cuartos_falta / 4,
+                        "semanas_informadas": semanas_informadas,
+                        "datos_academicos_disponibles": True,
+                    })
+                except DatabaseError:
+                    messages.info(request, "El resumen de notas y faltas estará disponible después de ejecutar migracion_academico.sql.")
                 cursor.execute("SELECT COUNT(*) FROM ficha_individual WHERE id_alumno = %s", [alumno[0]])
                 resumen["fichas"] = cursor.fetchone()[0]
-                cursor.execute("SELECT COUNT(*) FROM registro_asistencia ra JOIN ficha_individual fi ON fi.id = ra.id_ficha WHERE fi.id_alumno = %s", [alumno[0]])
-                resumen["registros_asistencia"] = cursor.fetchone()[0]
     elif rol == "PROFESOR":
         with connection.cursor() as cursor:
             cursor.execute("SELECT COUNT(*) FROM hoja_actividad ha JOIN profesor p ON p.id = ha.id_profesor WHERE p.dni = %s", [dni])
@@ -424,6 +453,8 @@ def modificar_alumno(request):
                 if not alumno:
                     messages.warning(request, "No se encontró ningún alumno con ese DNI.")
 
+    except Http404:
+        raise
     except Exception as e:
         messages.error(request, f"Error en la base de datos: {str(e)}")
 
@@ -464,6 +495,8 @@ def eliminar_alumno(request):
                 if not alumno:
                     messages.warning(request, "No se encontró ningún alumno con ese DNI.")
 
+    except Http404:
+        raise
     except Exception as e:
         messages.error(request, f"Error en la base de datos: {str(e)}")
 
@@ -476,9 +509,18 @@ def eliminar_alumno(request):
 @requiere_permiso('profesor', 'ver')
 def profesores(request):
     try:
-        lista = comites.listar_profesores()
         if request.alcance == "propio":
-            lista = [p for p in lista if p.dni == request.session.get("usuario_dni")]
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """SELECT id, dni, nombre, apellidos, domicilio,
+                              nivel_estudios, titulacion, tipo
+                       FROM profesor WHERE dni = %s""",
+                    [request.session.get("usuario_dni")],
+                )
+                fila = cursor.fetchone()
+            lista = [comites.Profesor(*fila)] if fila else []
+        else:
+            lista = comites.listar_profesores()
     except Exception as e:
         messages.error(request, f"Error al cargar profesores: {str(e)}")
         lista = []
@@ -558,6 +600,8 @@ def modificar_profesor(request):
                 if not profesor:
                     messages.warning(request, "No se encontró ningún profesor con ese DNI.")
 
+    except Http404:
+        raise
     except Exception as e:
         messages.error(request, f"Error en la base de datos: {str(e)}")
 
@@ -598,6 +642,8 @@ def eliminar_profesor(request):
                 if not profesor:
                     messages.warning(request, "No se encontró ningún profesor con ese DNI.")
 
+    except Http404:
+        raise
     except Exception as e:
         messages.error(request, f"Error en la base de datos: {str(e)}")
 
@@ -667,3 +713,65 @@ def permisos_log(request):
         registros = [dict(zip([col[0] for col in cursor.description], fila)) for fila in cursor.fetchall()]
     pagina = Paginator(registros, 25).get_page(request.GET.get("page"))
     return render(request, "myapp/permisos_log.html", {"pagina": pagina, "active_tab": "permisos_log"})
+
+
+def cargar_calificacion(request):
+    denegado = _solo_admin(request)
+    if denegado:
+        return denegado
+    form = CalificacionForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        alumno_dni = form.cleaned_data["alumno_dni"]
+        id_asignatura = int(form.cleaned_data["id_asignatura"])
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """SELECT al.id
+                   FROM alumno al
+                   JOIN grupo g ON g.id = al.id_grupo
+                   JOIN asignatura asi ON asi.id_curso = g.id_curso
+                   WHERE al.dni = %s AND asi.id = %s""",
+                [alumno_dni, id_asignatura],
+            )
+            alumno = cursor.fetchone()
+            if not alumno:
+                form.add_error("alumno_dni", "El alumno no existe o la materia no corresponde a su curso.")
+            else:
+                cursor.execute(
+                    """INSERT INTO calificacion (id_alumno, id_asignatura, nota, fecha)
+                       VALUES (%s, %s, %s, %s)""",
+                    [alumno[0], id_asignatura, form.cleaned_data["nota"], form.cleaned_data["fecha"]],
+                )
+                messages.success(request, "Nota cargada. El promedio de la materia se recalcula automáticamente.")
+                return redirect("cargar_calificacion")
+    return render(request, "myapp/cargar_calificacion.html", {"form": form, "active_tab": "academico"})
+
+
+def cargar_faltas_semanales(request):
+    denegado = _solo_admin(request)
+    if denegado:
+        return denegado
+    fecha = timezone.localdate()
+    semana_actual = fecha.isocalendar()
+    form = FaltaSemanalForm(request.POST or None, initial={"anio": semana_actual.year, "semana": semana_actual.week})
+    if request.method == "POST" and form.is_valid():
+        try:
+            date.fromisocalendar(form.cleaned_data["anio"], form.cleaned_data["semana"], 1)
+        except ValueError:
+            form.add_error("semana", "Esa semana no existe para el año indicado.")
+        else:
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT id FROM alumno WHERE dni = %s", [form.cleaned_data["alumno_dni"]])
+                alumno = cursor.fetchone()
+                if not alumno:
+                    form.add_error("alumno_dni", "No existe un alumno con ese DNI.")
+                else:
+                    unidades = int(form.cleaned_data["faltas"] * 4)
+                    cursor.execute(
+                        """INSERT INTO faltas_semanales (id_alumno, anio, semana, cuartos_falta)
+                           VALUES (%s, %s, %s, %s)
+                           ON DUPLICATE KEY UPDATE cuartos_falta = %s""",
+                        [alumno[0], form.cleaned_data["anio"], form.cleaned_data["semana"], unidades, unidades],
+                    )
+                    messages.success(request, "Faltas semanales guardadas. Si ya había un registro, se reemplazó.")
+                    return redirect("cargar_faltas_semanales")
+    return render(request, "myapp/cargar_faltas_semanales.html", {"form": form, "active_tab": "academico"})

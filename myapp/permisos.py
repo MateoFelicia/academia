@@ -85,7 +85,7 @@ def permisos_menu(request):
     visibles = {"index"}
     rol = normalizar_rol(rol)
     if rol == ROL_ADMIN:
-        visibles.update(("panel_permisos", "permisos_log"))
+        visibles.update(("panel_permisos", "permisos_log", "cargar_calificacion", "cargar_faltas_semanales"))
         visibles.update(item for item, regla in ITEMS_MENU.items() if regla)
     else:
         try:

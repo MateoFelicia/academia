@@ -74,6 +74,8 @@
                 {% endif %}
                 {% if 'panel_permisos' in permisos %}<a href="{% url 'panel_permisos' %}"><span class="nav-icon">⚙️</span><span>Permisos</span></a>{% endif %}
                 {% if 'permisos_log' in permisos %}<a href="{% url 'permisos_log' %}"><span class="nav-icon">🕘</span><span>Historial</span></a>{% endif %}
+                {% if 'cargar_calificacion' in permisos %}<a href="{% url 'cargar_calificacion' %}"><span class="nav-icon">📝</span><span>Cargar notas</span></a>{% endif %}
+                {% if 'cargar_faltas_semanales' in permisos %}<a href="{% url 'cargar_faltas_semanales' %}"><span class="nav-icon">📅</span><span>Faltas semanales</span></a>{% endif %}
             </nav>
             <div class="sidebar-note">
                 <span>GESTIÓN ACADÉMICA</span>

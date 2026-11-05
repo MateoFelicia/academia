@@ -196,3 +196,30 @@ class PermisosForm(forms.Form):
                     elif valor == "propio" and recurso not in ("alumno", "profesor"):
                         self.add_error(key, "El alcance propio solo aplica a alumnos y profesores.")
         return cleaned
+
+
+class CalificacionForm(forms.Form):
+    alumno_dni = forms.CharField(label="DNI del alumno", max_length=20)
+    id_asignatura = forms.ChoiceField(label="Materia")
+    nota = forms.DecimalField(label="Nota (0 a 10)", max_digits=4, decimal_places=2, min_value=0, max_value=10)
+    fecha = forms.DateField(label="Fecha", widget=forms.DateInput(attrs={"type": "date"}))
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["id_asignatura"].choices = [("", "Elegí una materia")] + _choices_materias()
+
+
+class FaltaSemanalForm(forms.Form):
+    alumno_dni = forms.CharField(label="DNI del alumno", max_length=20)
+    anio = forms.IntegerField(label="Año", min_value=2000, max_value=2100)
+    semana = forms.IntegerField(label="Semana ISO", min_value=1, max_value=53)
+    faltas = forms.DecimalField(
+        label="Faltas de la semana (0 a 5, en cuartos)",
+        max_digits=3, decimal_places=2, min_value=0, max_value=5,
+    )
+
+    def clean_faltas(self):
+        faltas = self.cleaned_data["faltas"]
+        if faltas * 4 != (faltas * 4).to_integral_value():
+            raise forms.ValidationError("La cantidad debe avanzar en incrementos de 0,25.")
+        return faltas

@@ -10,12 +10,20 @@
 <section class="page-hero"><div class="hero-copy"><div class="eyebrow"><span>///</span> MI ESPACIO</div><h1>Resumen personal</h1><p>Información vinculada a tu registro en el instituto.</p></div></section>
 <div class="stats-grid">
     {% if rol == "ALUMNO" %}
-    <article class="stat-card red"><span class="stat-label">FICHAS INDIVIDUALES</span><strong class="stat-value">{{ resumen.fichas|default:0 }}</strong></article>
-    <article class="stat-card"><span class="stat-label">REGISTROS DE ASISTENCIA</span><strong class="stat-value">{{ resumen.registros_asistencia|default:0 }}</strong></article>
+    <article class="stat-card red"><span class="stat-label">MATERIAS APROBADAS</span><strong class="stat-value">{{ resumen.aprobadas|default:0 }}</strong></article>
+    <article class="stat-card"><span class="stat-label">MATERIAS DESAPROBADAS</span><strong class="stat-value">{{ resumen.desaprobadas|default:0 }}</strong></article>
+    <article class="stat-card"><span class="stat-label">FALTAS ACUMULADAS</span><strong class="stat-value">{{ resumen.faltas|floatformat:"2" }}</strong><small>{{ resumen.semanas_informadas }} semanas informadas</small></article>
     {% else %}
     <article class="stat-card red"><span class="stat-label">ACTIVIDADES REGISTRADAS</span><strong class="stat-value">{{ resumen.actividades|default:0 }}</strong></article>
     {% endif %}
 </div>
+{% if rol == "ALUMNO" %}
+{% if not resumen.registro_alumno %}<section class="panel"><p>No hay un registro de alumno asociado a este usuario.</p></section>
+{% elif not resumen.datos_academicos_disponibles %}<section class="panel"><p>El resumen de notas y faltas estará disponible cuando se instale la migración académica.</p></section>
+{% else %}<section class="panel"><div class="section-title"><div><span>DETALLE PERSONAL</span><h2>Promedio por materia</h2></div></div>
+  {% for materia in resumen.materias %}<div class="course-row"><div class="course-code">{{ forloop.counter }}</div><div><strong>{{ materia.nombre }}</strong><span>Promedio final</span></div><b class="status {% if materia.promedio >= 7 %}success{% else %}warning{% endif %}">{{ materia.promedio|floatformat:"2" }}</b></div>{% empty %}<p>Todavía no hay notas cargadas.</p>{% endfor %}
+</section>{% endif %}
+{% endif %}
 {% elif rol == "ADMIN" %}
 <section class="page-hero" aria-labelledby="hero-title">
     <div class="hero-copy">

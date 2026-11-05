@@ -25,4 +25,6 @@ urlpatterns = [
     path("usuario/nuevo/", views.nuevo_usuario, name="nuevo_usuario"),
     path("permisos/", views.panel_permisos, name="panel_permisos"),
     path("permisos/historial/", views.permisos_log, name="permisos_log"),
+    path("academico/calificaciones/nueva/", views.cargar_calificacion, name="cargar_calificacion"),
+    path("academico/faltas-semanales/", views.cargar_faltas_semanales, name="cargar_faltas_semanales"),
 ]

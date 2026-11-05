@@ -1,0 +1,14 @@
+{% extends "myapp/base.html" %}
+{% block title %}Cargar nota{% endblock %}
+{% block heading %}Cargar calificación{% endblock %}
+{% block subtitle %}Cada nota se conserva y el promedio por materia se calcula automáticamente{% endblock %}
+{% block content %}
+<section class="panel form-preview">
+  <div class="section-title"><div><span>ADMINISTRACIÓN</span><h2>Nueva nota</h2></div></div>
+  {% if messages %}<ul class="messages">{% for message in messages %}<li class="{{ message.tags }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
+  <form method="post">{% csrf_token %}
+    {% for field in form %}<div class="form-group"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.errors %}<div class="alert alert-danger">{{ field.errors }}</div>{% endif %}</div>{% endfor %}
+    <button class="primary-button" type="submit">Guardar nota</button>
+  </form>
+</section>
+{% endblock %}
