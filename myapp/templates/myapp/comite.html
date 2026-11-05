@@ -12,7 +12,8 @@
         <div class="eyebrow"><span>///</span> LIBRO DE ACTAS</div>
         <h1 id="hero-title">Comités evaluadores</h1>
         <p>Actas firmadas por presidente, secretario y vocal.</p>
-        <button class="primary-button" id="openWizard">Nuevo comité</button>
+        {% if puede_crear and comite_posible %}<button class="primary-button" id="openWizard">Nuevo comité</button>{% endif %}
+        {% if puede_crear and not comite_posible %}<p class="alert alert-warning">Para crear un comité hacen falta al menos tres profesores cargados.</p>{% endif %}
     </div>
     <div class="hero-illustration" aria-hidden="true"></div>
 </section>
@@ -100,7 +101,7 @@
     <section class="panel quick-panel" id="listPanel">
         <div class="section-title">
             <div><span>REGISTRO</span><h2>Actas registradas</h2></div>
-            <button class="text-button" id="openWizardBtn">Nueva acta</button>
+            {% if puede_crear and comite_posible %}<button class="text-button" id="openWizardBtn">Nueva acta</button>{% endif %}
         </div>
 
         {% for c in comites %}
@@ -126,6 +127,7 @@
                     <span class="firma-titulo" style="display: block; color: var(--muted); font-size: 12px;">{{ c.vocal.titulacion }}</span>
                 </div>
             </div>
+            {% if puede_editar or puede_eliminar %}<div style="display: flex; gap: 8px; padding: 12px 20px;">{% if puede_editar %}<a class="btn btn-sm" href="{% url 'editar_comite' c.id %}">Editar acta</a>{% endif %}{% if puede_eliminar %}<a class="btn btn-sm btn-danger" href="{% url 'eliminar_comite' c.id %}">Eliminar acta</a>{% endif %}</div>{% endif %}
         </article>
         {% empty %}
         <div class="empty-illustration" style="min-height: 200px;">

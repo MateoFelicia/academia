@@ -17,8 +17,10 @@ PERMISOS_ADMIN = {
     ("profesor", "ver"): "todos", ("profesor", "crear"): "todos",
     ("profesor", "editar"): "todos", ("profesor", "eliminar"): "todos",
     ("comite", "ver"): "todos", ("comite", "crear"): "todos",
+    ("comite", "editar"): "todos", ("comite", "eliminar"): "todos",
     ("candidato", "ver"): "todos", ("candidato", "crear"): "todos",
-    ("candidato", "editar"): "todos", ("panel_permisos", "ver"): "todos",
+    ("candidato", "editar"): "todos", ("candidato", "eliminar"): "todos",
+    ("panel_permisos", "ver"): "todos",
     ("panel_permisos", "editar"): "todos",
 }
 
@@ -85,7 +87,7 @@ def permisos_menu(request):
     visibles = {"index"}
     rol = normalizar_rol(rol)
     if rol == ROL_ADMIN:
-        visibles.update(("panel_permisos", "permisos_log"))
+        visibles.update(("panel_permisos", "permisos_log", "cargar_calificacion", "cargar_faltas_semanales"))
         visibles.update(item for item, regla in ITEMS_MENU.items() if regla)
     else:
         try:

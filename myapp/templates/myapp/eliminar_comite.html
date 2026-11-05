@@ -1,0 +1,12 @@
+{% extends "myapp/base.html" %}
+{% block title %}Eliminar comité{% endblock %}
+{% block heading %}Eliminar comité{% endblock %}
+{% block subtitle %}Confirmá la baja del acta{% endblock %}
+{% block content %}
+<section class="panel form-preview">
+  <div class="section-title"><div><span>LIBRO DE ACTAS</span><h2>Acta de {{ comite.anio }}</h2></div></div>
+  {% if messages %}<ul class="messages">{% for message in messages %}<li class="{{ message.tags }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
+  <p>¿Eliminar el comité del año <strong>{{ comite.anio }}</strong>?</p>
+  <form method="post">{% csrf_token %}<button class="btn btn-danger" type="submit">Sí, eliminar</button> <a class="btn" href="{% url 'comite' %}">Cancelar</a></form>
+</section>
+{% endblock %}

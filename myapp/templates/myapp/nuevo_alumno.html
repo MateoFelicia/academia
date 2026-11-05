@@ -30,6 +30,8 @@
         </ul>
         {% endif %}
 
+        {% if not grupos_disponibles %}<div class="alert alert-warning">Todavía no hay grupos cargados. El alumno necesita pertenecer a un grupo existente. Primero cargá una especialidad, un curso y un grupo; cuando aparezca en la lista vas a poder matricularlo.</div>{% endif %}
+
         <form method="post" novalidate>
             {% csrf_token %}
 
@@ -58,7 +60,7 @@
             </div>
 
             <div style="display: flex; gap: 12px; margin-top: 20px;">
-                <button type="submit" class="btn btn-primary">Guardar alumno</button>
+                <button type="submit" class="btn btn-primary" {% if not grupos_disponibles %}disabled{% endif %}>Guardar alumno</button>
                 <a href="{% url 'alumnos' %}" class="btn" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">Cancelar</a>
             </div>
         </form>

@@ -1,0 +1,14 @@
+{% extends "myapp/base.html" %}
+{% block title %}Editar comité{% endblock %}
+{% block heading %}Editar comité{% endblock %}
+{% block subtitle %}Actualizá el año y los tres integrantes del acta{% endblock %}
+{% block content %}
+<section class="panel form-preview">
+  <div class="section-title"><div><span>LIBRO DE ACTAS</span><h2>Acta n.º {{ comite_id }}</h2></div></div>
+  <form method="post">{% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for field in form %}<div class="form-group"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.errors %}<div class="alert alert-danger">{{ field.errors }}</div>{% endif %}</div>{% endfor %}
+    <button class="primary-button" type="submit">Guardar cambios</button> <a class="btn" href="{% url 'comite' %}">Cancelar</a>
+  </form>
+</section>
+{% endblock %}
