@@ -6,6 +6,46 @@
 {% block topbar_title %}Administración{% endblock %}
 
 {% block content %}
+<section class="page-hero" aria-labelledby="intro-title" style="margin-bottom: 24px;">
+    <img src="{% static 'myapp/img/cupula.webp' %}" alt="" aria-hidden="true" class="hero-cupula">
+    <div class="hero-copy">
+        <h1 id="intro-title">ITR Control Central</h1>
+        <p>Plataforma de gestión académica y administrativa del instituto: centraliza candidatos, comités, alumnos, profesores, permisos y seguimiento académico en un solo lugar.</p>
+        {% if not request.session.usuario_dni or rol_asumido %}
+        <p style="margin-bottom: 14px; color: var(--ink); font-weight: 600;">Explorá la aplicación asumiendo un rol con permisos para ver cómo se organiza cada perfil.</p>
+        <form method="post" action="{% url 'set_role' %}" style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+            {% csrf_token %}
+            {% for r in roles_disponibles %}
+            <button type="submit" name="rol" value="{{ r }}" class="btn {% if rol == r %}btn-primary{% endif %}">{{ r }}</button>
+            {% endfor %}
+            <a href="{% url 'login' %}" class="btn btn-primary">Iniciar sesión</a>
+        </form>
+        {% if rol_asumido %}<p style="margin-top:12px; font-size:12px; color:var(--muted);">Modo de navegación por rol asumido: algunas secciones pueden requerir datos vinculados a un usuario real.</p>{% endif %}
+        {% else %}
+        <p style="color: var(--muted);">Sesión activa como <strong>{{ request.session.usuario_nombre }}</strong> ({{ rol }}).</p>
+        {% endif %}
+    </div>
+</section>
+
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+    <li class="{{ message.tags }}">{{ message }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+{% if publico and not request.session.usuario_dni %}
+<section class="panel" style="margin-bottom: 24px;">
+    <div class="section-title"><div><span>RESUMEN</span><h2>¿Qué podés hacer aquí?</h2></div></div>
+    <div class="dashboard-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+        <div class="stat-card red"><span class="stat-label">CANDIDATOS Y COMITÉS</span><strong class="stat-value" style="font-size:22px;">Seguimiento</strong><small>Registro de postulantes, entrevistas y conformación de comités.</small></div>
+        <div class="stat-card"><span class="stat-label">ALUMNOS Y PROFESORES</span><strong class="stat-value" style="font-size:22px;">Gestión</strong><small>Altas, modificaciones, listados y datos académicos.</small></div>
+        <div class="stat-card"><span class="stat-label">PERMISOS Y ROLES</span><strong class="stat-value" style="font-size:22px;">Control</strong><small>Accesos diferenciados según perfil y herramientas administrativas.</small></div>
+    </div>
+</section>
+{% endif %}
+
 {% if rol == "ALUMNO" or rol == "PROFESOR" %}
 <section class="page-hero"><div class="hero-copy"><div class="eyebrow"><span>///</span> MI ESPACIO</div><h1>Resumen personal</h1><p>Información vinculada a tu registro en el instituto.</p></div></section>
 <div class="stats-grid">

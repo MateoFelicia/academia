@@ -38,10 +38,11 @@ h3 { font-weight: 700; font-size: 1.1rem; }
 .brand small { font: 600 10px/1 "Inter", sans-serif; letter-spacing: 4.4px; color: #b9bbc0; }
 .panel-tag { border-top: 1px solid #393c42; border-bottom: 1px solid #393c42; padding: 13px 8px; color: #8e9198; font: 700 9px/1 "Inter", sans-serif; letter-spacing: 2.2px; }
 .side-nav { display: flex; flex-direction: column; gap: 5px; padding: 18px 0; }
-.side-nav button { border: 0; background: transparent; color: #bfc1c6; min-height: 46px; padding: 7px 10px; display: grid; grid-template-columns: 30px 1fr auto; align-items: center; gap: 9px; text-align: left; cursor: pointer; font-size: 13px; font-weight: 600; position: relative; }
-.side-nav button:hover { color: white; background: #25282e; }
-.side-nav button.active { background: var(--red); color: white; box-shadow: 3px 3px 0 #6f0811; }
-.side-nav button.active::before { content: ""; position: absolute; width: 3px; height: 25px; background: white; left: -3px; }
+.side-nav a, .side-nav button { border: 0; background: transparent; color: #bfc1c6; min-height: 46px; padding: 7px 10px; display: grid; grid-template-columns: 30px 1fr auto; align-items: center; gap: 9px; text-align: left; cursor: pointer; font-size: 13px; font-weight: 600; position: relative; text-decoration: none; width: 100%; }
+.side-nav a:hover, .side-nav button:hover { color: white; background: #25282e; }
+.side-nav a.active, .side-nav button.active { background: var(--red); color: white; box-shadow: 3px 3px 0 #6f0811; }
+.side-nav a.active::before, .side-nav button.active::before { content: ""; position: absolute; width: 3px; height: 25px; background: white; left: -3px; }
+.side-nav form { margin: 0; }
 .nav-icon { width: 27px; height: 27px; display: grid; place-items: center; border: 1px solid #494c52; }
 .side-nav .active .nav-icon { border-color: rgba(255,255,255,.45); }
 .sidebar-note { margin-top: auto; border: 1px solid #3c3f44; padding: 13px; position: relative; background: repeating-linear-gradient(-45deg, transparent, transparent 6px, rgba(255,255,255,.025) 6px, rgba(255,255,255,.025) 7px); }
@@ -63,13 +64,14 @@ h3 { font-weight: 700; font-size: 1.1rem; }
 .user-chip small { font-size: 9px; color: var(--muted); margin-top: 3px; }
 .chevron { color: var(--muted); margin-left: 7px; }
 .mobile-menu { display: none; width: 40px; height: 40px; background: white; border: 1px solid var(--line); place-items: center; cursor: pointer; }
-.content { max-width: 1500px; margin: 0 auto; padding: 28px 34px 20px; width: 100%; }
+.content { max-width: 1500px; margin: 0 auto; padding: 28px 34px 20px; width: 100%; position: relative; }
 .role-switch { display: inline-flex; border: 1px solid var(--ink); background: white; margin-bottom: 18px; box-shadow: 3px 3px 0 #d3d2cd; }
 .role-switch button { border: 0; border-right: 1px solid var(--ink); background: transparent; padding: 8px 14px; font: 700 10px "Inter", sans-serif; text-transform: uppercase; letter-spacing: .7px; cursor: pointer; }
 .role-switch button:last-child { border-right: 0; }
 .role-switch button.active { background: var(--ink); color: white; }
 
 .page-hero { min-height: 210px; overflow: hidden; background: var(--white); border: 2px solid var(--ink); box-shadow: var(--shadow); display: flex; align-items: stretch; justify-content: space-between; position: relative; margin-bottom: 26px; }
+.hero-cupula { position: absolute; right: 12px; bottom: 0; height: 92%; max-height: 190px; width: auto; opacity: 0.25; pointer-events: none; z-index: 0; filter: saturate(0.9); }
 .page-hero::before { content: ""; position: absolute; inset: 0; background: linear-gradient(120deg, transparent 0 53%, rgba(226,29,46,.04) 53% 54%, transparent 54%); pointer-events: none; }
 .hero-copy { padding: 29px 32px; align-self: center; z-index: 1; max-width: 670px; }
 h1 { font-size: clamp(34px, 4vw, 55px); }
@@ -249,6 +251,88 @@ footer { margin-top: 32px; border-top: 1px solid var(--line); padding: 17px 2px 
   .workshop-visual > span { font-size: 52px; }
   .empty-illustration { align-items: flex-start; padding: 17px; }
   footer { flex-direction: column; gap: 7px; }
+}
+
+/* Decorative route logo */
+.ruta-logo {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: clamp(12px, 1.8vw, 20px);
+  height: clamp(12px, 1.8vw, 20px);
+  object-fit: contain;
+  opacity: 0.75;
+  pointer-events: none;
+  z-index: 2;
+  animation: apartado-spin linear infinite;
+  animation-duration: var(--spin-duration, 6s);
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,.18));
+}
+@keyframes apartado-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Ad carousel */
+.ad-carousel {
+  margin-top: 24px;
+  border: 1.5px solid var(--ink);
+  background: var(--white);
+  box-shadow: var(--shadow);
+  padding: 10px;
+}
+.ad-carousel-viewport {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--white);
+}
+.ad-carousel-track {
+  position: relative;
+  width: 100%;
+  height: clamp(180px, 32vw, 320px);
+}
+.ad-carousel-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity .6s ease;
+  background: var(--white);
+}
+.ad-carousel-slide.is-active {
+  opacity: 1;
+}
+.ad-carousel-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  opacity: 1;
+  background: var(--white);
+}
+.ad-carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding-top: 10px;
+}
+.ad-dot {
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--ink);
+  background: var(--white);
+}
+.ad-dot.is-active {
+  background: var(--red);
+}
+
+@media (max-width: 600px) {
+  .ad-carousel {
+    margin-top: 18px;
+    padding: 8px;
+  }
+  .ad-carousel-track {
+    height: 220px;
+  }
 }
 
 /* Django form integration */

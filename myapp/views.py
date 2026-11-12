@@ -94,12 +94,12 @@ def nuevo_usuario(request):
     })
 
 
-@requiere_login
 def index(request):
     resumen = {}
     rol = normalizar_rol(request.session.get("nivel"))
     dni = request.session.get("usuario_dni")
-    if rol == "ALUMNO":
+    publico = not bool(dni)
+    if rol == "ALUMNO" and not publico:
         resumen.update({"registro_alumno": False, "materias": [], "aprobadas": 0, "desaprobadas": 0, "faltas": 0, "semanas_informadas": 0, "datos_academicos_disponibles": False})
         with connection.cursor() as cursor:
             cursor.execute("SELECT id FROM alumno WHERE dni = %s", [dni])
@@ -136,11 +136,18 @@ def index(request):
                     messages.info(request, "El resumen de notas y faltas estará disponible después de ejecutar migracion_academico.sql.")
                 cursor.execute("SELECT COUNT(*) FROM ficha_individual WHERE id_alumno = %s", [alumno[0]])
                 resumen["fichas"] = cursor.fetchone()[0]
-    elif rol == "PROFESOR":
+    elif rol == "PROFESOR" and not publico:
         with connection.cursor() as cursor:
             cursor.execute("SELECT COUNT(*) FROM hoja_actividad ha JOIN profesor p ON p.id = ha.id_profesor WHERE p.dni = %s", [dni])
             resumen["actividades"] = cursor.fetchone()[0]
-    return render(request, "myapp/index.html", {"active_tab": "index", "resumen": resumen, "rol": rol})
+    return render(request, "myapp/index.html", {
+        "active_tab": "index",
+        "resumen": resumen,
+        "rol": rol,
+        "publico": publico,
+        "rol_asumido": request.session.get("rol_asumido", False),
+        "roles_disponibles": ["ADMIN", "COMITE", "PROFESOR", "ALUMNO"],
+    })
 
 @requiere_permiso('candidato', 'ver')
 def candidatos(request):
@@ -805,6 +812,17 @@ def eliminar_profesor(request):
 
 
 def set_role(request):
+    if request.method == "POST":
+        rol = normalizar_rol(request.POST.get("rol"))
+        if rol in {"ADMIN", "COMITE", "PROFESOR", "ALUMNO"}:
+            request.session["nivel"] = rol
+            request.session["rol_asumido"] = True
+            if not request.session.get("usuario_dni"):
+                request.session["usuario_dni"] = "invitado"
+                request.session["usuario_nombre"] = "Visitante"
+            messages.success(request, f"Ahora estás navegando como {rol}.")
+        else:
+            messages.error(request, "Rol no válido.")
     return redirect("index")
 
 

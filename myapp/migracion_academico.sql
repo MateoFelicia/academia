@@ -1,5 +1,7 @@
 -- Nuevos registros académicos. No modifica las tablas existentes.
 -- Ejecutar manualmente después de confirmar copia de seguridad.
+USE academia
+
 
 CREATE TABLE calificacion (
     id INT NOT NULL AUTO_INCREMENT,
