@@ -1,0 +1,53 @@
+/* Panel de permisos — se apoya en design-system.css (mismas variables y clases base) */
+
+.perm-intro { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.perm-intro p { margin: 0; font-size: 12px; color: var(--muted); max-width: 520px; }
+.perm-legend { display: flex; gap: 16px; font-size: 11px; font-weight: 600; }
+.perm-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.perm-legend i { width: 10px; height: 10px; border: 1px solid var(--ink); background: var(--metal); }
+.perm-legend i.propio { background: var(--warning); border-color: var(--warning); }
+.perm-legend i.todos { background: var(--success); border-color: var(--success); }
+
+/* Matriz */
+.matriz { min-width: 640px; }
+.matriz th { font-size: 10px; letter-spacing: 1.2px; padding: 12px 14px; border-bottom: 2px solid var(--ink); }
+.matriz th.col-rol { text-align: center; background: var(--ink); color: var(--white); font: 800 15px "Barlow Condensed", sans-serif; letter-spacing: 1px; text-transform: uppercase; }
+.matriz td { font-size: 12px; padding: 8px 14px; vertical-align: middle; }
+.matriz td:first-child { display: table-cell; } /* anula la regla de avatar del design-system */
+.matriz td.celda-accion { font-weight: 600; padding-left: 28px; }
+.matriz td.celda-rol { text-align: center; width: 24%; min-width: 150px; }
+
+.matriz tr.grupo th { background: var(--paper); border-top: 2px solid var(--ink); border-bottom: 1px solid var(--line); text-align: left; padding: 10px 14px; font: 800 17px "Barlow Condensed", sans-serif; letter-spacing: .6px; text-transform: uppercase; color: var(--ink); }
+.matriz tr.grupo th small { font: 500 11px "Inter", sans-serif; letter-spacing: 0; text-transform: none; color: var(--muted); margin-left: 10px; }
+
+/* Selector de alcance: el color indica el valor, sin leer el texto */
+.matriz select { appearance: none; -webkit-appearance: none; width: 100%; min-height: 36px; padding: 6px 30px 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; background-color: var(--metal); color: var(--muted); border: 1px solid var(--line); border-left: 5px solid var(--muted); border-radius: var(--radius); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%2317191d' stroke-width='1.6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 11px center; }
+.matriz select:hover { border-color: var(--ink); }
+.matriz select:focus-visible { outline: 3px solid rgba(226,29,46,.28); outline-offset: 1px; }
+.matriz select[data-alcance="todos"] { background-color: #e3f1ec; color: var(--success); border-color: var(--success); }
+.matriz select[data-alcance="propio"] { background-color: #f8ecd9; color: var(--warning); border-color: var(--warning); }
+.matriz select[data-alcance="todos"], .matriz select[data-alcance="propio"] { border-left-width: 5px; }
+.matriz select.cambiado { box-shadow: 3px 3px 0 var(--red); }
+
+/* Barra de guardado */
+.perm-barra { position: sticky; bottom: 0; z-index: 3; display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 18px; padding: 12px 16px; background: var(--white); border: 2px solid var(--ink); box-shadow: var(--shadow); }
+.perm-barra output { font-size: 12px; font-weight: 600; color: var(--muted); }
+.perm-barra output b { color: var(--red); font: 800 20px "Barlow Condensed", sans-serif; margin-right: 4px; }
+.perm-barra .primary-button[disabled] { opacity: .45; cursor: not-allowed; transform: none; box-shadow: 3px 3px 0 var(--ink); background: var(--red); }
+
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Historial */
+.log-cambio { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; }
+.log-cambio span { padding: 2px 8px; border: 1px solid var(--line); background: var(--metal); color: var(--muted); }
+.log-cambio span.todos { background: #e3f1ec; color: var(--success); border-color: var(--success); }
+.log-cambio span.propio { background: #f8ecd9; color: var(--warning); border-color: var(--warning); }
+.log-cambio em { font-style: normal; color: var(--muted); }
+.perm-pag { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 0 0; font-size: 12px; color: var(--muted); }
+.perm-pag a { color: var(--ink); font-weight: 700; text-decoration: none; border: 1px solid var(--ink); padding: 7px 14px; background: var(--white); }
+.perm-pag a:hover { background: var(--ink); color: var(--white); }
+
+@media (max-width: 900px) {
+  .perm-barra { flex-direction: column; align-items: stretch; }
+}
+@media (prefers-reduced-motion: reduce) { .matriz select, .perm-barra * { transition: none; } }

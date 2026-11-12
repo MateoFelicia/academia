@@ -1,12 +1,37 @@
 {% extends "myapp/base.html" %}
+{% load static %}
 {% block title %}Historial de permisos{% endblock %}
 {% block heading %}Historial de permisos{% endblock %}
 {% block subtitle %}Cambios registrados por administración{% endblock %}
+{% block extra_style %}<link rel="stylesheet" href="{% static 'myapp/css/permisos.css' %}">{% endblock %}
 {% block content %}
 <section class="panel">
   <div class="section-title"><div><span>ADMINISTRACIÓN</span><h2>Historial</h2></div></div>
-  <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Administrador</th><th>Rol</th><th>Recurso</th><th>Acción</th><th>Anterior</th><th>Nuevo</th></tr></thead>
-  <tbody>{% for r in pagina %}<tr><td>{{ r.fecha }}</td><td>{{ r.admin_dni }} · {{ r.admin_nombre }}</td><td>{{ r.rol }}</td><td>{{ r.recurso }}</td><td>{{ r.accion }}</td><td>{{ r.valor_anterior|default:"—" }}</td><td>{{ r.valor_nuevo|default:"—" }}</td></tr>{% empty %}<tr><td colspan="7">Sin cambios registrados.</td></tr>{% endfor %}</tbody></table></div>
-  <nav>{% if pagina.has_previous %}<a href="?page={{ pagina.previous_page_number }}">Anterior</a>{% endif %} Página {{ pagina.number }} de {{ pagina.paginator.num_pages }} {% if pagina.has_next %}<a href="?page={{ pagina.next_page_number }}">Siguiente</a>{% endif %}</nav>
+  <div class="table-wrap">
+    <table class="matriz">
+      <thead><tr><th scope="col">Fecha</th><th scope="col">Administrador</th><th scope="col">Rol</th><th scope="col">Recurso</th><th scope="col">Acción</th><th scope="col">Cambio</th></tr></thead>
+      <tbody>
+        {% for r in pagina %}
+        <tr>
+          <td>{{ r.fecha|date:"d/m/Y H:i" }}</td>
+          <td>{{ r.admin_nombre }} <small style="color:var(--muted)">DNI {{ r.admin_dni }}</small></td>
+          <td>{{ r.rol }}</td>
+          <td>{{ r.recurso|capfirst }}</td>
+          <td>{{ r.accion|capfirst }}</td>
+          <td><span class="log-cambio"><span class="{{ r.valor_anterior|default:'' }}">{{ r.valor_anterior|default:"Ninguno"|capfirst }}</span><em>→</em><span class="{{ r.valor_nuevo|default:'' }}">{{ r.valor_nuevo|default:"Ninguno"|capfirst }}</span></span></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">Todavía no hay cambios. Cuando guardes la matriz de permisos, van a aparecer acá.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <nav class="perm-pag" aria-label="Paginación">
+    <span>Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+    <span>
+      {% if pagina.has_previous %}<a href="?page={{ pagina.previous_page_number }}">Anterior</a>{% endif %}
+      {% if pagina.has_next %}<a href="?page={{ pagina.next_page_number }}">Siguiente</a>{% endif %}
+    </span>
+  </nav>
 </section>
 {% endblock %}

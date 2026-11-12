@@ -1,18 +1,82 @@
 {% extends "myapp/base.html" %}
+{% load static %}
 {% block title %}Permisos{% endblock %}
 {% block heading %}Permisos por rol{% endblock %}
 {% block subtitle %}Configuración de accesos para Comité, Profesor y Alumno{% endblock %}
+{% block extra_style %}<link rel="stylesheet" href="{% static 'myapp/css/permisos.css' %}">{% endblock %}
 {% block content %}
 <section class="panel">
   <div class="section-title"><div><span>ADMINISTRACIÓN</span><h2>Matriz de permisos</h2></div></div>
-  {% if messages %}{% for message in messages %}<p>{{ message }}</p>{% endfor %}{% endif %}
-  <form method="post">{% csrf_token %}
+
+  {% if messages %}<ul class="messages">{% for message in messages %}<li class="{{ message.tags }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
+
+  <div class="perm-intro">
+    <p>Elegí qué puede hacer cada rol sobre cada recurso. Los cambios se aplican al guardar y quedan registrados en el historial.</p>
+    <div class="perm-legend" aria-label="Referencias">
+      <span><i></i>Ninguno</span>
+      <span><i class="propio"></i>Propio: solo sus registros</span>
+      <span><i class="todos"></i>Todos</span>
+    </div>
+  </div>
+
+  <form method="post" id="form-permisos">{% csrf_token %}
     {{ form.non_field_errors }}
-    <div class="table-wrap"><table><thead><tr><th>Recurso</th><th>Acción</th>{% for rol in roles %}<th>{{ rol }}</th>{% endfor %}</tr></thead>
-    <tbody>{% for fila in filas %}<tr><td>{{ fila.recurso }}</td><td>{{ fila.accion }}</td>
-      {% for celda in fila.celdas %}<td>{{ celda }}</td>{% endfor %}
-    </tr>{% endfor %}</tbody></table></div>
-    <button class="primary-button" type="submit">Guardar cambios</button>
+    <div class="table-wrap">
+      <table class="matriz">
+        <thead>
+          <tr>
+            <th scope="col">Permiso</th>
+            {% for rol in roles %}<th scope="col" class="col-rol">{{ rol }}</th>{% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for fila in filas %}
+            {% ifchanged fila.recurso %}
+            <tr class="grupo"><th scope="rowgroup" colspan="{{ roles|length|add:1 }}">
+              {% if fila.recurso == "comite" %}Comité{% else %}{{ fila.recurso|capfirst }}{% endif %}{% if fila.recurso == "alumno" or fila.recurso == "profesor" %}<small>admite alcance «Propio»</small>{% endif %}
+            </th></tr>
+            {% endifchanged %}
+            <tr>
+              <td class="celda-accion">{{ fila.accion|capfirst }}</td>
+              {% for celda in fila.celdas %}
+              <td class="celda-rol">
+                <label class="sr-only" for="{{ celda.id_for_label }}">{{ celda.label }}</label>
+                {{ celda }}
+                {{ celda.errors }}
+              </td>
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="perm-barra">
+      <output id="perm-estado" aria-live="polite">Sin cambios pendientes</output>
+      <button class="primary-button" type="submit" id="perm-guardar" disabled>Guardar cambios</button>
+    </div>
   </form>
 </section>
+
+<script>
+(function () {
+  var selects = document.querySelectorAll('#form-permisos select');
+  var estado = document.getElementById('perm-estado');
+  var guardar = document.getElementById('perm-guardar');
+  function inicial(s) { var o = s.querySelector('option[selected]'); return o ? o.value : ''; }
+  function refrescar() {
+    var n = 0;
+    selects.forEach(function (s) {
+      s.setAttribute('data-alcance', s.value);
+      var cambio = s.value !== inicial(s);
+      s.classList.toggle('cambiado', cambio);
+      if (cambio) n++;
+    });
+    estado.innerHTML = n ? '<b>' + n + '</b>' + (n === 1 ? 'cambio sin guardar' : 'cambios sin guardar') : 'Sin cambios pendientes';
+    guardar.disabled = n === 0;
+  }
+  selects.forEach(function (s) { s.addEventListener('change', refrescar); });
+  refrescar();
+})();
+</script>
 {% endblock %}
